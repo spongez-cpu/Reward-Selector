@@ -4,17 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-       <!-- === PWA TAGS FOR BOTH CHROME & SAFARI === -->
-    <!-- Chrome / Android -->
+    <title>Study Reward Selector</title>
+
+    <!-- === PWA TAGS FOR BOTH CHROME & SAFARI === -->
     <link rel="manifest" href="manifest.webmanifest">
     <meta name="theme-color" content="#2ecc71">
-    
-    <!-- Safari / iOS Specific -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Study Rewards">
     <link rel="apple-touch-icon" href="IMG_2096.png">
-    <title>Study Reward Selector</title>
+
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -37,16 +36,9 @@
             margin-bottom: 20px;
         }
 
-        h1 {
-            color: #333;
-            margin-top: 0;
-        }
+        h1 { color: #333; margin-top: 0; }
 
-        .input-area {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+        .input-area { display: flex; gap: 10px; margin-bottom: 20px; }
 
         input {
             flex: 1;
@@ -67,15 +59,9 @@
             font-weight: bold;
         }
 
-        button:hover {
-            opacity: 0.9;
-        }
+        button:hover { opacity: 0.9; }
 
-        ul {
-            list-style: none;
-            padding: 0;
-            text-align: left;
-        }
+        ul { list-style: none; padding: 0; text-align: left; }
 
         li {
             background: #f9f9f9;
@@ -88,17 +74,9 @@
             border-left: 5px solid #3498db;
         }
 
-        .delete-btn {
-            background-color: #e74c3c;
-            padding: 5px 10px;
-            font-size: 12px;
-        }
+        .delete-btn { background-color: #e74c3c; padding: 5px 10px; font-size: 12px; }
+        .delete-btn:hover { background-color: #c0392b; }
 
-        .delete-btn:hover {
-            background-color: #c0392b;
-        }
-
-        /* Stats & Coins */
         .stats-box {
             background: #e8f8f5;
             border: 2px solid #1abc9c;
@@ -110,19 +88,15 @@
             font-weight: bold;
         }
 
-        /* NEW: override coin button */
         .override-btn {
             background-color: #f39c12;
             padding: 8px 14px;
             font-size: 14px;
             width: 100%;
+            margin-top: 10px;
         }
+        .override-btn:hover { background-color: #d68910; }
 
-        .override-btn:hover {
-            background-color: #d68910;
-        }
-
-        /* Timer Styles */
         .timer-display {
             font-size: 36px;
             font-weight: bold;
@@ -131,24 +105,12 @@
             font-family: monospace;
         }
 
-        .timer-buttons {
-            display: flex;
-            gap: 10px;
-        }
+        .timer-buttons { display: flex; gap: 10px; }
+        .timer-buttons button { flex: 1; }
 
-        .timer-buttons button {
-            flex: 1;
-        }
+        #stop-timer-btn { background-color: #e74c3c; }
+        #stop-timer-btn:hover { background-color: #c0392b; }
 
-        #stop-timer-btn {
-            background-color: #e74c3c;
-        }
-
-        #stop-timer-btn:hover {
-            background-color: #c0392b;
-        }
-
-        /* Vertical Growing Selector Box */
         .spinner-box {
             display: flex;
             flex-direction: column;
@@ -180,64 +142,45 @@
             box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
         }
 
-        #spin-btn {
-            background-color: #9b59b6;
-            width: 100%;
-            margin-top: 5px;
-        }
+        #spin-btn { background-color: #9b59b6; width: 100%; margin-top: 5px; }
+        #spin-btn:hover { background-color: #8e44ad; }
 
-        #spin-btn:hover {
-            background-color: #8e44ad;
-        }
+        #result { font-weight: bold; color: #8e44ad; margin-top: 15px; font-size: 18px; }
 
-        #result {
+        .reset-buttons-group { display: flex; gap: 10px; margin-top: 10px; }
+        .reset-data-btn, .reset-coins-btn { flex: 1; font-size: 12px; padding: 8px 10px; border-radius: 6px; }
+        .reset-coins-btn { background-color: #f39c12; }
+        .reset-coins-btn:hover { background-color: #d68910; }
+        .reset-data-btn { background-color: #95a5a6; }
+        .reset-data-btn:hover { background-color: #7f8c8d; }
+
+        /* --- NEW: Unit Timer Styles --- */
+        .unit-stats-box {
+            background: #eaf2f8;
+            border: 2px solid #3498db;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #2980b9;
             font-weight: bold;
-            color: #8e44ad;
-            margin-top: 15px;
-            font-size: 18px;
         }
-
-        .reset-buttons-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .reset-data-btn, .reset-coins-btn {
-            flex: 1;
-            font-size: 12px;
-            padding: 8px 10px;
-            border-radius: 6px;
-        }
-
-        .reset-coins-btn {
-            background-color: #f39c12;
-        }
-
-        .reset-coins-btn:hover {
-            background-color: #d68910;
-        }
-
-        .reset-data-btn {
-            background-color: #95a5a6;
-        }
-
-        .reset-data-btn:hover {
-            background-color: #7f8c8d;
-        }
+        .unit-list li { border-left-color: #e67e22; }
+        .unit-label { font-weight: bold; color: #333; }
+        .unit-hours { color: #e67e22; font-size: 14px; }
+        .select-unit-btn { background-color: #3498db; padding: 5px 10px; font-size: 12px; margin-left: 5px; }
+        .select-unit-btn:hover { background-color: #2980b9; }
     </style>
 </head>
 
 <body>
 
-    <!-- STUDY TIMER -->
+    <!-- GENERAL STUDY TIMER -->
     <div class="container">
-        <h1>Study Timer ⏱️</h1>
+        <h1>General Study Timer ⏱️</h1>
         <div class="stats-box">
             Coins Available: <span id="coin-count">0</span> 🪙<br>
-            <span style="font-size: 14px; color: #666; font-weight: normal;">Total Hours Studied: <span
-                    id="total-hours">0</span>h</span>
-            <div style="margin-top: 12px;">
+            <span style="font-size: 14px; color: #666; font-weight: normal;">Total Hours Studied: <span id="total-hours">0</span>h</span>
+            <div>
                 <button class="override-btn" onclick="claimOverrideCoin()">Already did one? +1 Coin 🪙</button>
             </div>
         </div>
@@ -248,10 +191,32 @@
             <button id="start-timer-btn" onclick="toggleTimer()">Start Study</button>
             <button id="stop-timer-btn" onclick="stopAndClaimTimer()">Finish & Claim</button>
         </div>
-        <p style="font-size: 13px; color: #666; margin-top: 15px;">(1 Hour studied = 1  Coin)</p>
+        <p style="font-size: 13px; color: #666; margin-top: 15px;">(1 Hour studied = 1 Reward Coin)</p>
     </div>
 
-    <!--  LIST -->
+    <!-- NEW: SPECIFIC UNIT TIMER -->
+    <div class="container">
+        <h1>Unit Timer 📚</h1>
+        
+        <div class="unit-stats-box">
+            Currently Tracking: <span id="current-unit-name" style="color: #e67e22;">None (Select a Unit)</span><br>
+            <span style="font-size: 14px; font-weight: normal;">Unit Time: <span id="unit-timer-display">00:00:00</span></span>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="unit-input" placeholder="Add unit (e.g. Math, History)">
+            <button onclick="addUnit()" style="background-color: #3498db;">Add</button>
+        </div>
+
+        <ul id="unit-list" class="unit-list"></ul>
+
+        <div class="timer-buttons" style="margin-top: 15px;">
+            <button id="start-unit-timer-btn" onclick="toggleUnitTimer()" disabled>Start Unit</button>
+            <button id="stop-unit-timer-btn" onclick="stopAndClaimUnitTimer()" disabled style="background-color: #e74c3c;">Finish & Claim</button>
+        </div>
+    </div>
+
+    <!-- REWARD LIST -->
     <div class="container">
         <h1>Reward Menu 🎁</h1>
         <div class="input-area">
@@ -265,14 +230,10 @@
     <div class="container">
         <h1>Spin for Rewards! 🎰</h1>
         <p>Cost to spin: <strong>1 Coin</strong></p>
-
-        <div class="spinner-box" id="spinner-box">
-            <!-- Full list renders here vertically and grows as items are added -->
-        </div>
-
+        <div class="spinner-box" id="spinner-box"></div>
         <button id="spin-btn" onclick="spinWheel()">Spin the List! (-1 Coin)</button>
         <div id="result"></div>
-
+        
         <div class="reset-buttons-group">
             <button class="reset-coins-btn" onclick="resetCoinsOnly()">Reset Coins (0)</button>
             <button class="reset-data-btn" onclick="resetData()">Reset All Data</button>
@@ -280,11 +241,10 @@
     </div>
 
     <script>
+        // --- GENERAL TIMER DATA ---
         let savedCoins = localStorage.getItem('studyCoins');
         let studyCoins = savedCoins !== null ? parseFloat(savedCoins) : 0;
-
         let totalHoursStudied = parseFloat(localStorage.getItem('totalHoursStudied')) || 0;
-
         let savedRewards = localStorage.getItem('studyRewards');
         let rewards = savedRewards ? JSON.parse(savedRewards) : [];
 
@@ -297,13 +257,26 @@
         let isStudying = false;
         let isSpinning = false;
 
+        // --- NEW: UNIT TIMER DATA ---
+        let units = JSON.parse(localStorage.getItem('studyUnits')) || [
+            { name: "Math", hours: 0 }, 
+            { name: "Science", hours: 0 }
+        ];
+        let activeUnitIndex = -1; // -1 means none selected
+        let unitTimerInterval = null;
+        let unitSecondsElapsed = 0;
+        let isUnitStudying = false;
+
+
+        // ==========================================
+        // GENERAL TIMER FUNCTIONS
+        // ==========================================
         function toggleTimer() {
             const btn = document.getElementById("start-timer-btn");
             if (!isStudying) {
                 isStudying = true;
                 btn.innerText = "Pause";
                 btn.style.backgroundColor = "#e67e22";
-
                 timerInterval = setInterval(() => {
                     secondsElapsed++;
                     updateTimerDisplay();
@@ -318,14 +291,12 @@
 
         function stopAndClaimTimer() {
             if (secondsElapsed === 0) return;
-
             clearInterval(timerInterval);
             isStudying = false;
             document.getElementById("start-timer-btn").innerText = "Start Study";
             document.getElementById("start-timer-btn").style.backgroundColor = "#2ecc71";
 
             const hoursEarned = secondsElapsed / 3600;
-
             studyCoins += hoursEarned;
             totalHoursStudied += hoursEarned;
 
@@ -342,10 +313,108 @@
             document.getElementById("timer-display").innerText = `${hrs}:${mins}:${secs}`;
         }
 
+        // ==========================================
+        // NEW: UNIT TIMER FUNCTIONS
+        // ==========================================
+        function addUnit() {
+            const input = document.getElementById("unit-input");
+            const text = input.value.trim();
+            if (text !== "") {
+                units.push({ name: text, hours: 0 });
+                input.value = "";
+                saveData();
+                updateUI();
+            }
+        }
+
+        function deleteUnit(index, event) {
+            event.stopPropagation(); // Prevent triggering the row click
+            if (activeUnitIndex === index) {
+                stopAndClaimUnitTimer(); // Claim any active time before deleting
+                activeUnitIndex = -1;
+            } else if (activeUnitIndex > index) {
+                activeUnitIndex--; // Shift index if deleting a unit above the active one
+            }
+            units.splice(index, 1);
+            saveData();
+            updateUI();
+        }
+
+        function selectUnit(index) {
+            if (isUnitStudying) {
+                alert("Please finish the current unit timer before switching!");
+                return;
+            }
+            activeUnitIndex = index;
+            document.getElementById("current-unit-name").innerText = units[index].name;
+            
+            // Enable timer buttons
+            document.getElementById("start-unit-timer-btn").disabled = false;
+            document.getElementById("stop-unit-timer-btn").disabled = false;
+            
+            updateUI();
+        }
+
+        function toggleUnitTimer() {
+            if (activeUnitIndex === -1) return;
+            const btn = document.getElementById("start-unit-timer-btn");
+            
+            if (!isUnitStudying) {
+                isUnitStudying = true;
+                btn.innerText = "Pause";
+                btn.style.backgroundColor = "#e67e22";
+                unitTimerInterval = setInterval(() => {
+                    unitSecondsElapsed++;
+                    updateUnitTimerDisplay();
+                }, 1000);
+            } else {
+                isUnitStudying = false;
+                btn.innerText = "Resume";
+                btn.style.backgroundColor = "#2ecc71";
+                clearInterval(unitTimerInterval);
+            }
+        }
+
+        function stopAndClaimUnitTimer() {
+            if (unitSecondsElapsed === 0) return;
+            clearInterval(unitTimerInterval);
+            isUnitStudying = false;
+            document.getElementById("start-unit-timer-btn").innerText = "Start Unit";
+            document.getElementById("start-unit-timer-btn").style.backgroundColor = "#2ecc71";
+
+            const hoursEarned = unitSecondsElapsed / 3600;
+            
+            // Add to global coins and total hours
+            studyCoins += hoursEarned;
+            totalHoursStudied += hoursEarned;
+            
+            // Add to specific unit hours
+            if (activeUnitIndex !== -1 && units[activeUnitIndex]) {
+                units[activeUnitIndex].hours += hoursEarned;
+            }
+
+            unitSecondsElapsed = 0;
+            updateUnitTimerDisplay();
+            saveData();
+            updateUI();
+        }
+
+        function updateUnitTimerDisplay() {
+            const hrs = Math.floor(unitSecondsElapsed / 3600).toString().padStart(2, '0');
+            const mins = Math.floor((unitSecondsElapsed % 3600) / 60).toString().padStart(2, '0');
+            const secs = (unitSecondsElapsed % 60).toString().padStart(2, '0');
+            document.getElementById("unit-timer-display").innerText = `${hrs}:${mins}:${secs}`;
+        }
+
+        // ==========================================
+        // UI UPDATES & DATA SAVING
+        // ==========================================
         function updateUI() {
+            // Update General Stats
             document.getElementById("coin-count").innerText = studyCoins.toFixed(2);
             document.getElementById("total-hours").innerText = totalHoursStudied.toFixed(2);
 
+            // Update Reward List
             const list = document.getElementById("reward-list");
             list.innerHTML = "";
             rewards.forEach((reward, index) => {
@@ -354,18 +423,40 @@
                 list.appendChild(li);
             });
 
+            // Update Unit List
+            const unitList = document.getElementById("unit-list");
+            unitList.innerHTML = "";
+            units.forEach((unit, index) => {
+                const li = document.createElement("li");
+                li.style.cursor = "pointer";
+                if (index === activeUnitIndex) {
+                    li.style.borderLeftColor = "#e67e22";
+                    li.style.backgroundColor = "#fdf2e9";
+                }
+                
+                li.innerHTML = `
+                    <div>
+                        <span class="unit-label">${unit.name}</span><br>
+                        <span class="unit-hours">${unit.hours.toFixed(2)}h studied</span>
+                    </div>
+                    <div>
+                        <button class="select-unit-btn" onclick="selectUnit(${index})">Select</button>
+                        <button class="delete-btn" onclick="deleteUnit(${index}, event)">X</button>
+                    </div>
+                `;
+                unitList.appendChild(li);
+            });
+
             updateSpinnerUI();
         }
 
         function updateSpinnerUI(activeIndex = -1) {
             const spinnerBox = document.getElementById("spinner-box");
             spinnerBox.innerHTML = "";
-
             if (rewards.length === 0) {
                 spinnerBox.innerHTML = "<p style='color: #888;'>No rewards added yet!</p>";
                 return;
             }
-
             rewards.forEach((reward, index) => {
                 const div = document.createElement("div");
                 div.className = "spinner-item" + (index === activeIndex ? " active" : "");
@@ -377,7 +468,6 @@
         function addReward() {
             const input = document.getElementById("reward-input");
             const text = input.value.trim();
-
             if (text !== "") {
                 rewards.push(text);
                 input.value = "";
@@ -392,18 +482,15 @@
             updateUI();
         }
 
-        /* NEW: Override — you already did one of the listed rewards, claim 1 coin */
         function claimOverrideCoin() {
             studyCoins += 1;
             saveData();
             updateUI();
-            document.getElementById("result").innerText =
-                "✅ Override used: +1 coin (you already did a reward)";
+            document.getElementById("result").innerText = "✅ Override used: +1 coin";
         }
 
         function spinWheel() {
             if (isSpinning) return;
-
             if (studyCoins < 1) {
                 alert("Not enough coins! Study more to earn coins.");
                 return;
@@ -428,7 +515,6 @@
 
             function animateSpin() {
                 updateSpinnerUI(currentIndex);
-
                 currentIndex = (currentIndex + 1) % rewards.length;
                 step++;
 
@@ -443,7 +529,6 @@
                     isSpinning = false;
                 }
             }
-
             animateSpin();
         }
 
@@ -451,6 +536,7 @@
             localStorage.setItem('studyCoins', studyCoins);
             localStorage.setItem('totalHoursStudied', totalHoursStudied);
             localStorage.setItem('studyRewards', JSON.stringify(rewards));
+            localStorage.setItem('studyUnits', JSON.stringify(units)); // Save units
         }
 
         function resetCoinsOnly() {
@@ -467,12 +553,13 @@
             }
         }
 
-        // Initialize UI on load
+        // Initialize
         updateUI();
+
+        // PWA Service Worker
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('sw.js');
+            navigator.serviceWorker.register('sw.js');
         }
     </script>
 </body>
-
 </html>
