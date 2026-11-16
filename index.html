@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Study Reward Selector</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f7f6;
@@ -17,7 +13,6 @@
             align-items: center;
             padding: 20px;
             margin: 0;
-            min-height: 100vh;
         }
 
         .container {
@@ -34,95 +29,181 @@
         h1 {
             color: #2c3e50;
             font-size: 1.6rem;
-            margin-top: 0;
-            margin-bottom: 8px;
+            margin: 0 0 6px;
         }
 
         .subtitle {
             color: #7f8c8d;
             font-size: 0.9rem;
-            margin-bottom: 24px;
+            margin: 0 0 20px;
         }
 
-        /* Coin display */
-        .coin-display {
+        /* ---- Add reward row ---- */
+        .add-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .add-row input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+
+        .add-row input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .add-row button {
+            padding: 10px 16px;
+            background: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .add-row button:hover {
+            background: #2980b9;
+        }
+
+        /* ---- Reward selector ---- */
+        .rewards {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .reward {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 14px;
+            cursor: pointer;
+            text-align: left;
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        .reward:hover {
+            border-color: #3498db;
+        }
+
+        .reward.selected {
+            background: #e8f4fd;
+            border-color: #3498db;
+        }
+
+        .reward .check {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid #bdc3c7;
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            font-size: 0.7rem;
+            color: #fff;
+        }
+
+        .reward.selected .check {
+            background: #3498db;
+            border-color: #3498db;
+        }
+
+        .reward .label {
+            flex: 1;
+            font-size: 0.95rem;
+            color: #34495e;
+        }
+
+        .reward .remove {
+            background: none;
+            border: none;
+            color: #bdc3c7;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+
+        .reward .remove:hover {
+            color: #e74c3c;
+        }
+
+        .empty-note {
+            color: #95a5a6;
+            font-size: 0.85rem;
+            padding: 10px 0;
+        }
+
+        /* ---- Selection result ---- */
+        .chosen {
+            min-height: 24px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #27ae60;
+            margin-bottom: 8px;
+        }
+
+        /* ---- Override section ---- */
+        .override-box {
+            border-top: 1px dashed #dfe6e9;
+            margin-top: 20px;
+            padding-top: 18px;
+        }
+
+        .override-box h2 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #95a5a6;
+            margin: 0 0 12px;
+        }
+
+        .coin-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             background: #fff8e1;
             border: 2px solid #ffd54f;
             border-radius: 10px;
-            padding: 12px 18px;
-            margin-bottom: 24px;
-            font-size: 1.1rem;
+            padding: 10px 16px;
+            margin-bottom: 12px;
             font-weight: 600;
             color: #b8860b;
         }
 
-        .coin-display .coin-icon {
-            font-size: 1.5rem;
-        }
-
-        .coin-display .coin-count {
-            font-size: 1.4rem;
+        .coin-row .coin-count {
+            font-size: 1.3rem;
             color: #e67e22;
         }
 
-        /* Task list */
-        .task-list {
-            list-style: none;
-            padding: 0;
-            margin: 0 0 20px 0;
-            text-align: left;
-        }
-
-        .task-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            background: #f8f9fa;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 12px 14px;
-            margin-bottom: 10px;
-            transition: background 0.2s, border-color 0.2s;
-        }
-
-        .task-item.completed {
-            background: #e8f5e9;
-            border-color: #a5d6a7;
-        }
-
-        .task-item .task-label {
-            flex: 1;
-            font-size: 0.95rem;
-            color: #34495e;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .task-item.completed .task-label {
-            text-decoration: line-through;
-            color: #7f8c8d;
-        }
-
-        /* Override button */
         .override-btn {
+            width: 100%;
+            padding: 11px;
             background: #fff;
             border: 2px solid #e67e22;
             color: #e67e22;
-            font-size: 0.78rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
             font-weight: 600;
-            padding: 6px 10px;
-            border-radius: 6px;
             cursor: pointer;
-            white-space: nowrap;
-            transition: background 0.2s, color 0.2s;
+            transition: background 0.15s, color 0.15s;
         }
 
-        .override-btn:hover:not(:disabled) {
+        .override-btn:hover {
             background: #e67e22;
             color: #fff;
         }
@@ -130,20 +211,15 @@
         .override-btn:disabled {
             border-color: #bdc3c7;
             color: #bdc3c7;
+            background: #f8f9fa;
             cursor: not-allowed;
         }
 
-        .override-btn.gained {
-            border-color: #27ae60;
-            color: #27ae60;
-        }
-
-        /* Message feedback */
         .message {
-            min-height: 24px;
-            font-size: 0.9rem;
+            min-height: 20px;
+            font-size: 0.85rem;
             font-weight: 600;
-            margin-bottom: 16px;
+            margin-top: 10px;
             color: #27ae60;
             opacity: 0;
             transition: opacity 0.3s;
@@ -156,194 +232,206 @@
         .message.error {
             color: #e74c3c;
         }
-
-        /* Reset button */
-        .reset-btn {
-            background: none;
-            border: 1px solid #bdc3c7;
-            color: #7f8c8d;
-            font-size: 0.8rem;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.2s, color 0.2s;
-        }
-
-        .reset-btn:hover {
-            background: #ecf0f1;
-            color: #34495e;
-        }
-
-        .hint {
-            font-size: 0.75rem;
-            color: #95a5a6;
-            margin-top: 14px;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Study Reward Selector</h1>
-        <p class="subtitle">Complete tasks to earn coins. Already done one? Use Override!</p>
+        <p class="subtitle">Add your rewards, then pick the one you've earned.</p>
 
-        <!-- Coin counter -->
-        <div class="coin-display">
-            <span class="coin-icon">🪙</span>
-            <span>Coins:</span>
-            <span class="coin-count" id="coinCount">0</span>
+        <!-- Primary feature: add + select rewards -->
+        <div class="add-row">
+            <input type="text" id="rewardInput" placeholder="e.g. 20 min of gaming"
+                   maxlength="60" autocomplete="off">
+            <button id="addBtn">Add</button>
         </div>
 
-        <!-- Task list -->
-        <ul class="task-list" id="taskList"></ul>
+        <div class="rewards" id="rewards"></div>
 
-        <!-- Feedback message -->
-        <div class="message" id="message"></div>
+        <div class="chosen" id="chosen"></div>
 
-        <button class="reset-btn" id="resetBtn">Reset Progress</button>
-        <p class="hint">Tip: Click a task to complete it. If you already did one, hit "Override" to gain 1 coin instead.</p>
+        <!-- Optional override feature -->
+        <div class="override-box">
+            <h2>Already did it? Override</h2>
+            <div class="coin-row">
+                <span>🪙</span>
+                <span>Coins:</span>
+                <span class="coin-count" id="coinCount">0</span>
+            </div>
+            <button class="override-btn" id="overrideBtn" disabled>
+                Override selected reward (+1 coin)
+            </button>
+            <div class="message" id="message"></div>
+        </div>
     </div>
 
     <script>
-        // Task definitions — extend or edit freely
-        const TASKS = [
-            { id: 'read',     label: 'Read one chapter' },
-            { id: 'flash',    label: 'Review flashcards' },
-            { id: 'notes',    label: 'Write summary notes' },
-            { id: 'practice', label: 'Do practice problems' }
-        ];
-
-        const COIN_PER_OVERRIDE = 1;
         const STORAGE_KEY = 'studyRewardSelector';
+        const COIN_PER_OVERRIDE = 1;
 
         // State
         let state = loadState();
 
-        // DOM refs
-        const taskListEl = document.getElementById('taskList');
+        // DOM
+        const rewardsEl   = document.getElementById('rewards');
+        const chosenEl    = document.getElementById('chosen');
+        const inputEl     = document.getElementById('rewardInput');
+        const addBtn      = document.getElementById('addBtn');
+        const overrideBtn = document.getElementById('overrideBtn');
         const coinCountEl = document.getElementById('coinCount');
-        const messageEl = document.getElementById('message');
-        const resetBtn = document.getElementById('resetBtn');
+        const messageEl   = document.getElementById('message');
 
         let messageTimer = null;
 
-        /* ---------- Persistence ---------- */
+        /* ---------- persistence ---------- */
         function loadState() {
             try {
                 const raw = localStorage.getItem(STORAGE_KEY);
                 if (raw) {
-                    const parsed = JSON.parse(raw);
-                    // Validate shape
-                    if (parsed && typeof parsed === 'object' && parsed.tasks) {
+                    const p = JSON.parse(raw);
+                    if (p && Array.isArray(p.rewards)) {
                         return {
-                            coins: Number(parsed.coins) || 0,
-                            tasks: parsed.tasks || {}
+                            rewards: p.rewards,
+                            selectedId: p.selectedId || null,
+                            coins: Number(p.coins) || 0,
+                            overridden: p.overridden || {}
                         };
                     }
                 }
-            } catch (e) {
-                console.warn('Could not load saved state:', e);
-            }
-            return { coins: 0, tasks: {} };
+            } catch (e) { /* ignore corrupt data */ }
+            return { rewards: [], selectedId: null, coins: 0, overridden: {} };
         }
 
         function saveState() {
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-            } catch (e) {
-                console.warn('Could not save state:', e);
-            }
+            } catch (e) { /* ignore */ }
         }
 
-        /* ---------- Rendering ---------- */
+        /* ---------- rendering ---------- */
         function render() {
             coinCountEl.textContent = state.coins;
-            taskListEl.innerHTML = '';
+            rewardsEl.innerHTML = '';
 
-            TASKS.forEach(task => {
-                const record = state.tasks[task.id] || {};
-                const li = document.createElement('li');
-                li.className = 'task-item' + (record.completed ? ' completed' : '');
-
-                // Label (click to complete)
-                const label = document.createElement('span');
-                label.className = 'task-label';
-                label.textContent = task.label;
-                label.title = record.completed
-                    ? 'Completed'
-                    : 'Click to mark complete';
-                label.addEventListener('click', () => completeTask(task.id));
-
-                // Override button
-                const btn = document.createElement('button');
-                btn.className = 'override-btn';
-                if (record.overridden) {
-                    btn.textContent = '✔ Override used';
-                    btn.disabled = true;
-                    btn.classList.add('gained');
-                } else {
-                    btn.textContent = 'Override (+1 🪙)';
-                    btn.addEventListener('click', () => overrideTask(task.id));
-                }
-
-                li.appendChild(label);
-                li.appendChild(btn);
-                taskListEl.appendChild(li);
-            });
-        }
-
-        /* ---------- Actions ---------- */
-        function completeTask(id) {
-            const record = state.tasks[id] || {};
-            if (record.completed) return;
-
-            state.tasks[id] = { ...record, completed: true };
-            saveState();
-            render();
-            showMessage(`Task completed: "${getLabel(id)}"`);
-        }
-
-        function overrideTask(id) {
-            const record = state.tasks[id] || {};
-            if (record.overridden) {
-                showMessage('Override already used for this task.', true);
-                return;
+            if (state.rewards.length === 0) {
+                const note = document.createElement('div');
+                note.className = 'empty-note';
+                note.textContent = 'No rewards yet — add one above.';
+                rewardsEl.appendChild(note);
             }
 
-            // Mark overridden (and completed, since "you've done it")
-            state.tasks[id] = { ...record, overridden: true, completed: true };
+            state.rewards.forEach(reward => {
+                const isSelected = state.selectedId === reward.id;
+                const row = document.createElement('div');
+                row.className = 'reward' + (isSelected ? ' selected' : '');
+
+                // Select area (click to select)
+                const check = document.createElement('span');
+                check.className = 'check';
+                check.textContent = isSelected ? '✔' : '';
+
+                const label = document.createElement('span');
+                label.className = 'label';
+                label.textContent = reward.label;
+
+                row.appendChild(check);
+                row.appendChild(label);
+
+                // Remove button
+                const remove = document.createElement('button');
+                remove.className = 'remove';
+                remove.textContent = '✕';
+                remove.title = 'Remove reward';
+                remove.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeReward(reward.id);
+                });
+                row.appendChild(remove);
+
+                // Clicking the row selects the reward
+                row.addEventListener('click', () => selectReward(reward.id));
+
+                rewardsEl.appendChild(row);
+            });
+
+            // Selected result text
+            const selected = state.rewards.find(r => r.id === state.selectedId);
+            chosenEl.textContent = selected ? `Selected: ${selected.label}` : '';
+
+            // Override button state
+            const alreadyOverridden = selected && state.overridden[selected.id];
+            if (!selected) {
+                overrideBtn.disabled = true;
+                overrideBtn.textContent = 'Override selected reward (+1 coin)';
+            } else if (alreadyOverridden) {
+                overrideBtn.disabled = true;
+                overrideBtn.textContent = '✔ Override already used';
+            } else {
+                overrideBtn.disabled = false;
+                overrideBtn.textContent = 'Override selected reward (+1 coin)';
+            }
+        }
+
+        /* ---------- actions ---------- */
+        function addReward() {
+            const label = inputEl.value.trim();
+            if (!label) {
+                showMessage('Enter a reward first.', true);
+                return;
+            }
+            const id = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+            state.rewards.push({ id, label });
+            state.selectedId = id; // auto-select the new one
+            inputEl.value = '';
+            saveState();
+            render();
+            showMessage(`Added reward: "${label}"`);
+        }
+
+        function selectReward(id) {
+            state.selectedId = id;
+            saveState();
+            render();
+        }
+
+        function removeReward(id) {
+            state.rewards = state.rewards.filter(r => r.id !== id);
+            if (state.selectedId === id) state.selectedId = null;
+            delete state.overridden[id];
+            saveState();
+            render();
+        }
+
+        function overrideSelected() {
+            const selected = state.rewards.find(r => r.id === state.selectedId);
+            if (!selected) return;
+            if (state.overridden[selected.id]) {
+                showMessage('Override already used for this reward.', true);
+                return;
+            }
+            state.overridden[selected.id] = true;
             state.coins += COIN_PER_OVERRIDE;
             saveState();
             render();
-            showMessage(`Override! +${COIN_PER_OVERRIDE} coin for "${getLabel(id)}"`);
+            showMessage(`Override! +${COIN_PER_OVERRIDE} coin for "${selected.label}"`);
         }
 
-        function resetProgress() {
-            if (!confirm('Reset all progress and coins?')) return;
-            state = { coins: 0, tasks: {} };
-            saveState();
-            render();
-            showMessage('Progress reset.');
-        }
-
-        /* ---------- Helpers ---------- */
-        function getLabel(id) {
-            const t = TASKS.find(t => t.id === id);
-            return t ? t.label : id;
-        }
-
+        /* ---------- helpers ---------- */
         function showMessage(text, isError = false) {
             messageEl.textContent = text;
             messageEl.classList.toggle('error', isError);
             messageEl.classList.add('show');
-
             if (messageTimer) clearTimeout(messageTimer);
-            messageTimer = setTimeout(() => {
-                messageEl.classList.remove('show');
-            }, 2200);
+            messageTimer = setTimeout(() => messageEl.classList.remove('show'), 2200);
         }
 
-        /* ---------- Init ---------- */
-        resetBtn.addEventListener('click', resetProgress);
+        /* ---------- init ---------- */
+        addBtn.addEventListener('click', addReward);
+        inputEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') addReward();
+        });
+        overrideBtn.addEventListener('click', overrideSelected);
+
         render();
     </script>
 </body>
