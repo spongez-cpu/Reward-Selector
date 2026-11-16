@@ -1,8 +1,24 @@
 const CACHE_NAME = 'study-rewards-v1';
-const ASSETS = ['./index.html', './manifest.webmanifest', './IMG_2096.png'];
+const ASSETS = [
+  './',
+  './index.html',
+  './manifest.webmanifest',
+  './IMG_2096.png'
+];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
+  self.skipWaiting();
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+  );
+});
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)));
+    })
+  );
 });
 
 self.addEventListener('fetch', (e) => {
