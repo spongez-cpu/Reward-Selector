@@ -248,10 +248,10 @@
             <button id="start-timer-btn" onclick="toggleTimer()">Start Study</button>
             <button id="stop-timer-btn" onclick="stopAndClaimTimer()">Finish & Claim</button>
         </div>
-        <p style="font-size: 13px; color: #666; margin-top: 15px;">(1 Hour studied = 1 Reward Coin)</p>
+        <p style="font-size: 13px; color: #666; margin-top: 15px;">(1 Hour studied = 1  Coin)</p>
     </div>
 
-    <!-- REWARD LIST -->
+    <!--  LIST -->
     <div class="container">
         <h1>Reward Menu 🎁</h1>
         <div class="input-area">
@@ -289,7 +289,7 @@
         let rewards = savedRewards ? JSON.parse(savedRewards) : ["15m YouTube", "Snack Break", "Episode of Show", "10m Walk"];
 
         if (!rewards || rewards.length <= 1) {
-            rewards = ["15m YouTube", "Snack Break", "Episode of Show", "10m Walk"];
+            rewards = [];
         }
 
         let timerInterval = null;
