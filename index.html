@@ -2,9 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Study Reward Selector</title>
+
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#3498db">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Rewards">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
     <style>
+        * { box-sizing: border-box; }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f7f6;
@@ -12,7 +22,11 @@
             flex-direction: column;
             align-items: center;
             padding: 20px;
+            padding-top: calc(20px + env(safe-area-inset-top));
+            padding-bottom: calc(20px + env(safe-area-inset-bottom));
             margin: 0;
+            min-height: 100vh;
+            -webkit-text-size-adjust: 100%;
         }
 
         .container {
@@ -26,38 +40,23 @@
             margin-bottom: 20px;
         }
 
-        h1 {
-            color: #2c3e50;
-            font-size: 1.6rem;
-            margin: 0 0 6px;
-        }
+        h1 { color: #2c3e50; font-size: 1.6rem; margin: 0 0 6px; }
 
-        .subtitle {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-            margin: 0 0 20px;
-        }
+        .subtitle { color: #7f8c8d; font-size: 0.9rem; margin: 0 0 20px; }
 
         /* ---- Add reward row ---- */
-        .add-row {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
+        .add-row { display: flex; gap: 8px; margin-bottom: 20px; }
 
         .add-row input {
             flex: 1;
             padding: 10px 12px;
             border: 1px solid #d0d7de;
             border-radius: 8px;
-            font-size: 0.95rem;
+            font-size: 1rem; /* 16px stops iOS zoom */
             font-family: inherit;
         }
 
-        .add-row input:focus {
-            outline: none;
-            border-color: #3498db;
-        }
+        .add-row input:focus { outline: none; border-color: #3498db; }
 
         .add-row button {
             padding: 10px 16px;
@@ -70,65 +69,92 @@
             cursor: pointer;
         }
 
-        .add-row button:hover {
-            background: #2980b9;
+        .add-row button:hover { background: #2980b9; }
+
+        /* ---- Slot machine ---- */
+        .slot-machine {
+            border: 3px solid #e67e22;
+            border-radius: 12px;
+            padding: 24px 16px;
+            margin-bottom: 20px;
+            background: linear-gradient(180deg, #fff8e1, #fff);
+            overflow: hidden;
         }
 
-        /* ---- Reward selector ---- */
-        .rewards {
+        .slot-window {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #2c3e50;
+            min-height: 48px;
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 16px;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            background: #fff;
+            border-radius: 8px;
+            border: 2px dashed #ffd54f;
+            transition: transform 0.1s;
         }
 
-        .reward {
+        .slot-window.spinning {
+            animation: shake 0.12s linear infinite;
+            color: #7f8c8d;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+            100% { transform: translateX(0); }
+        }
+
+        .slot-window.winner {
+            color: #27ae60;
+            border-color: #27ae60;
+            animation: pop 0.4s ease;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.12); }
+            100% { transform: scale(1); }
+        }
+
+        .spin-btn {
+            width: 100%;
+            margin-top: 16px;
+            padding: 14px;
+            background: #e67e22;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+        }
+
+        .spin-btn:hover { background: #d35400; }
+        .spin-btn:active { transform: scale(0.98); }
+        .spin-btn:disabled { background: #bdc3c7; cursor: not-allowed; }
+
+        /* ---- Reward list ---- */
+        .rewards { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+
+        .reward-item {
             display: flex;
             align-items: center;
             gap: 10px;
             background: #f8f9fa;
-            border: 2px solid #e0e0e0;
+            border: 1px solid #e0e0e0;
             border-radius: 8px;
-            padding: 12px 14px;
-            cursor: pointer;
+            padding: 10px 14px;
             text-align: left;
-            transition: border-color 0.15s, background 0.15s;
         }
 
-        .reward:hover {
-            border-color: #3498db;
-        }
+        .reward-item .label { flex: 1; font-size: 0.95rem; color: #34495e; }
 
-        .reward.selected {
-            background: #e8f4fd;
-            border-color: #3498db;
-        }
-
-        .reward .check {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            border: 2px solid #bdc3c7;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            color: #fff;
-        }
-
-        .reward.selected .check {
-            background: #3498db;
-            border-color: #3498db;
-        }
-
-        .reward .label {
-            flex: 1;
-            font-size: 0.95rem;
-            color: #34495e;
-        }
-
-        .reward .remove {
+        .reward-item .remove {
             background: none;
             border: none;
             color: #bdc3c7;
@@ -137,31 +163,12 @@
             padding: 0 4px;
         }
 
-        .reward .remove:hover {
-            color: #e74c3c;
-        }
+        .reward-item .remove:hover { color: #e74c3c; }
 
-        .empty-note {
-            color: #95a5a6;
-            font-size: 0.85rem;
-            padding: 10px 0;
-        }
-
-        /* ---- Selection result ---- */
-        .chosen {
-            min-height: 24px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: #27ae60;
-            margin-bottom: 8px;
-        }
+        .empty-note { color: #95a5a6; font-size: 0.85rem; padding: 10px 0; }
 
         /* ---- Override section ---- */
-        .override-box {
-            border-top: 1px dashed #dfe6e9;
-            margin-top: 20px;
-            padding-top: 18px;
-        }
+        .override-box { border-top: 1px dashed #dfe6e9; margin-top: 20px; padding-top: 18px; }
 
         .override-box h2 {
             font-size: 0.85rem;
@@ -185,10 +192,7 @@
             color: #b8860b;
         }
 
-        .coin-row .coin-count {
-            font-size: 1.3rem;
-            color: #e67e22;
-        }
+        .coin-row .coin-count { font-size: 1.3rem; color: #e67e22; }
 
         .override-btn {
             width: 100%;
@@ -203,17 +207,8 @@
             transition: background 0.15s, color 0.15s;
         }
 
-        .override-btn:hover {
-            background: #e67e22;
-            color: #fff;
-        }
-
-        .override-btn:disabled {
-            border-color: #bdc3c7;
-            color: #bdc3c7;
-            background: #f8f9fa;
-            cursor: not-allowed;
-        }
+        .override-btn:hover { background: #e67e22; color: #fff; }
+        .override-btn:disabled { border-color: #bdc3c7; color: #bdc3c7; background: #f8f9fa; cursor: not-allowed; }
 
         .message {
             min-height: 20px;
@@ -225,32 +220,32 @@
             transition: opacity 0.3s;
         }
 
-        .message.show {
-            opacity: 1;
-        }
-
-        .message.error {
-            color: #e74c3c;
-        }
+        .message.show { opacity: 1; }
+        .message.error { color: #e74c3c; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Study Reward Selector</h1>
-        <p class="subtitle">Add your rewards, then pick the one you've earned.</p>
+        <p class="subtitle">Add rewards, hit Spin, and let fate decide.</p>
 
-        <!-- Primary feature: add + select rewards -->
+        <!-- Add rewards -->
         <div class="add-row">
             <input type="text" id="rewardInput" placeholder="e.g. 20 min of gaming"
                    maxlength="60" autocomplete="off">
             <button id="addBtn">Add</button>
         </div>
 
+        <!-- Slot machine (primary feature) -->
+        <div class="slot-machine">
+            <div class="slot-window" id="slotWindow">🎰 Ready?</div>
+            <button class="spin-btn" id="spinBtn">SPIN</button>
+        </div>
+
+        <!-- Reward list -->
         <div class="rewards" id="rewards"></div>
 
-        <div class="chosen" id="chosen"></div>
-
-        <!-- Optional override feature -->
+        <!-- Override (added feature) -->
         <div class="override-box">
             <h2>Already did it? Override</h2>
             <div class="coin-row">
@@ -259,7 +254,7 @@
                 <span class="coin-count" id="coinCount">0</span>
             </div>
             <button class="override-btn" id="overrideBtn" disabled>
-                Override selected reward (+1 coin)
+                Override last win (+1 coin)
             </button>
             <div class="message" id="message"></div>
         </div>
@@ -268,15 +263,18 @@
     <script>
         const STORAGE_KEY = 'studyRewardSelector';
         const COIN_PER_OVERRIDE = 1;
+        const SPIN_DURATION = 1800;   // ms of spinning
+        const TICK_INTERVAL = 80;     // ms between random flips
 
-        // State
         let state = loadState();
+        let lastWinnerId = null;      // the reward that just won
+        let spinning = false;
 
-        // DOM
         const rewardsEl   = document.getElementById('rewards');
-        const chosenEl    = document.getElementById('chosen');
         const inputEl     = document.getElementById('rewardInput');
         const addBtn      = document.getElementById('addBtn');
+        const spinBtn     = document.getElementById('spinBtn');
+        const slotWindow  = document.getElementById('slotWindow');
         const overrideBtn = document.getElementById('overrideBtn');
         const coinCountEl = document.getElementById('coinCount');
         const messageEl   = document.getElementById('message');
@@ -292,88 +290,71 @@
                     if (p && Array.isArray(p.rewards)) {
                         return {
                             rewards: p.rewards,
-                            selectedId: p.selectedId || null,
                             coins: Number(p.coins) || 0,
                             overridden: p.overridden || {}
                         };
                     }
                 }
-            } catch (e) { /* ignore corrupt data */ }
-            return { rewards: [], selectedId: null, coins: 0, overridden: {} };
+            } catch (e) { /* ignore */ }
+            return { rewards: [], coins: 0, overridden: {} };
         }
 
         function saveState() {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-            } catch (e) { /* ignore */ }
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+            catch (e) { /* ignore */ }
         }
 
         /* ---------- rendering ---------- */
         function render() {
             coinCountEl.textContent = state.coins;
-            rewardsEl.innerHTML = '';
 
+            rewardsEl.innerHTML = '';
             if (state.rewards.length === 0) {
                 const note = document.createElement('div');
                 note.className = 'empty-note';
                 note.textContent = 'No rewards yet — add one above.';
                 rewardsEl.appendChild(note);
             }
-
             state.rewards.forEach(reward => {
-                const isSelected = state.selectedId === reward.id;
                 const row = document.createElement('div');
-                row.className = 'reward' + (isSelected ? ' selected' : '');
-
-                // Select area (click to select)
-                const check = document.createElement('span');
-                check.className = 'check';
-                check.textContent = isSelected ? '✔' : '';
+                row.className = 'reward-item';
 
                 const label = document.createElement('span');
                 label.className = 'label';
                 label.textContent = reward.label;
 
-                row.appendChild(check);
-                row.appendChild(label);
-
-                // Remove button
                 const remove = document.createElement('button');
                 remove.className = 'remove';
                 remove.textContent = '✕';
                 remove.title = 'Remove reward';
-                remove.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    removeReward(reward.id);
-                });
+                remove.addEventListener('click', () => removeReward(reward.id));
+
+                row.appendChild(label);
                 row.appendChild(remove);
-
-                // Clicking the row selects the reward
-                row.addEventListener('click', () => selectReward(reward.id));
-
                 rewardsEl.appendChild(row);
             });
 
-            // Selected result text
-            const selected = state.rewards.find(r => r.id === state.selectedId);
-            chosenEl.textContent = selected ? `Selected: ${selected.label}` : '';
-
-            // Override button state
-            const alreadyOverridden = selected && state.overridden[selected.id];
-            if (!selected) {
+            // Override button reflects last winner
+            const winner = state.rewards.find(r => r.id === lastWinnerId);
+            const alreadyOverridden = winner && state.overridden[winner.id];
+            if (!winner) {
                 overrideBtn.disabled = true;
-                overrideBtn.textContent = 'Override selected reward (+1 coin)';
+                overrideBtn.textContent = 'Override last win (+1 coin)';
             } else if (alreadyOverridden) {
                 overrideBtn.disabled = true;
                 overrideBtn.textContent = '✔ Override already used';
             } else {
                 overrideBtn.disabled = false;
-                overrideBtn.textContent = 'Override selected reward (+1 coin)';
+                overrideBtn.textContent = `Override "${winner.label}" (+1 coin)`;
             }
+
+            // Spin needs at least 2 rewards
+            spinBtn.disabled = spinning || state.rewards.length < 2;
         }
 
         /* ---------- actions ---------- */
         function addReward() {
+            if (spinning) return;
             const label = inputEl.value.trim();
             if (!label) {
                 showMessage('Enter a reward first.', true);
@@ -381,39 +362,65 @@
             }
             const id = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
             state.rewards.push({ id, label });
-            state.selectedId = id; // auto-select the new one
             inputEl.value = '';
             saveState();
             render();
-            showMessage(`Added reward: "${label}"`);
-        }
-
-        function selectReward(id) {
-            state.selectedId = id;
-            saveState();
-            render();
+            showMessage(`Added: "${label}"`);
         }
 
         function removeReward(id) {
+            if (spinning) return;
             state.rewards = state.rewards.filter(r => r.id !== id);
-            if (state.selectedId === id) state.selectedId = null;
+            if (lastWinnerId === id) lastWinnerId = null;
             delete state.overridden[id];
             saveState();
             render();
         }
 
-        function overrideSelected() {
-            const selected = state.rewards.find(r => r.id === state.selectedId);
-            if (!selected) return;
-            if (state.overridden[selected.id]) {
+        function spin() {
+            if (spinning || state.rewards.length < 2) return;
+            spinning = true;
+            lastWinnerId = null;
+            spinBtn.disabled = true;
+            overrideBtn.disabled = true;
+            slotWindow.classList.remove('winner');
+            slotWindow.classList.add('spinning');
+            slotWindow.textContent = '🎰';
+
+            const startTime = Date.now();
+            const tick = setInterval(() => {
+                const pick = state.rewards[Math.floor(Math.random() * state.rewards.length)];
+                slotWindow.textContent = pick.label;
+            }, TICK_INTERVAL);
+
+            setTimeout(() => {
+                clearInterval(tick);
+                slotWindow.classList.remove('spinning');
+
+                const winner = state.rewards[Math.floor(Math.random() * state.rewards.length)];
+                lastWinnerId = winner.id;
+                slotWindow.textContent = winner.label;
+                slotWindow.classList.add('winner');
+
+                spinning = false;
+                saveState();
+                render();
+                showMessage(`🎉 You got: "${winner.label}"`);
+            }, SPIN_DURATION);
+        }
+
+        function overrideLastWin() {
+            const winner = state.rewards.find(r => r.id === lastWinnerId);
+            if (!winner) return;
+            if (state.overridden[winner.id]) {
                 showMessage('Override already used for this reward.', true);
                 return;
             }
-            state.overridden[selected.id] = true;
+            state.overridden[winner.id] = true;
             state.coins += COIN_PER_OVERRIDE;
             saveState();
             render();
-            showMessage(`Override! +${COIN_PER_OVERRIDE} coin for "${selected.label}"`);
+            showMessage(`Override! +${COIN_PER_OVERRIDE} coin for "${winner.label}"`);
         }
 
         /* ---------- helpers ---------- */
@@ -427,12 +434,20 @@
 
         /* ---------- init ---------- */
         addBtn.addEventListener('click', addReward);
-        inputEl.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') addReward();
-        });
-        overrideBtn.addEventListener('click', overrideSelected);
+        inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') addReward(); });
+        spinBtn.addEventListener('click', spin);
+        overrideBtn.addEventListener('click', overrideLastWin);
 
         render();
+
+        /* ---------- Service worker ---------- */
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => {
+                    console.warn('Service worker registration failed:', err);
+                });
+            });
+        }
     </script>
 </body>
 </html>
