@@ -154,7 +154,7 @@
         .reset-data-btn { background-color: #95a5a6; }
         .reset-data-btn:hover { background-color: #7f8c8d; }
 
-        /* --- NEW: Unit Timer Styles --- */
+        /* --- Unit Timer Styles --- */
         .unit-stats-box {
             background: #eaf2f8;
             border: 2px solid #3498db;
@@ -194,7 +194,7 @@
         <p style="font-size: 13px; color: #666; margin-top: 15px;">(1 Hour studied = 1 Reward Coin)</p>
     </div>
 
-    <!-- NEW: SPECIFIC UNIT TIMER -->
+    <!-- SPECIFIC UNIT TIMER -->
     <div class="container">
         <h1>Unit Timer 📚</h1>
         
@@ -204,7 +204,7 @@
         </div>
 
         <div class="input-area">
-            <input type="text" id="unit-input" placeholder="Add unit (e.g. ECE2072,FIT3155,MTH3170)">
+            <input type="text" id="unit-input" placeholder="Add unit (e.g. ECE2072, FIT3155)">
             <button onclick="addUnit()" style="background-color: #3498db;">Add</button>
         </div>
 
@@ -248,17 +248,15 @@
         let savedRewards = localStorage.getItem('studyRewards');
         let rewards = savedRewards ? JSON.parse(savedRewards) : [];
 
-        if (!rewards || rewards.length <= 1) {
-            rewards = [];
-        }
-
         let timerInterval = null;
         let secondsElapsed = 0;
         let isStudying = false;
         let isSpinning = false;
 
-        // --- NEW: UNIT TIMER DATA ---
-        let units = JSON.parse(localStorage.getItem('studyUnits'));
+        // --- UNIT TIMER DATA (Fixed to handle first-time null) ---
+        let savedUnits = localStorage.getItem('studyUnits');
+        let units = savedUnits ? JSON.parse(savedUnits) : []; 
+        
         let activeUnitIndex = -1; // -1 means none selected
         let unitTimerInterval = null;
         let unitSecondsElapsed = 0;
@@ -311,7 +309,7 @@
         }
 
         // ==========================================
-        // NEW: UNIT TIMER FUNCTIONS
+        // UNIT TIMER FUNCTIONS
         // ==========================================
         function addUnit() {
             const input = document.getElementById("unit-input");
