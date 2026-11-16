@@ -76,6 +76,17 @@
             justify-content: space-between;
             align-items: center;
             border-left: 5px solid #3498db;
+            gap: 8px;
+        }
+
+        /* NEW: reward name takes available space so buttons sit on the right */
+        li .reward-name {
+            flex: 1;
+        }
+
+        li.overridden {
+            border-left-color: #f39c12;
+            background: #fff8e1;
         }
 
         .delete-btn {
@@ -86,6 +97,24 @@
 
         .delete-btn:hover {
             background-color: #c0392b;
+        }
+
+        /* NEW: override button */
+        .override-btn {
+            background-color: #f39c12;
+            padding: 5px 10px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .override-btn:hover {
+            background-color: #d68910;
+        }
+
+        .override-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+            opacity: 0.7;
         }
 
         /* Stats & Coins */
@@ -240,14 +269,14 @@
     <div class="container">
         <h1>Spin for Rewards! 🎰</h1>
         <p>Cost to spin: <strong>1 Coin</strong></p>
-        
+
         <div class="spinner-box" id="spinner-box">
             <!-- Full list renders here vertically and grows as items are added -->
         </div>
 
         <button id="spin-btn" onclick="spinWheel()">Spin the List! (-1 Coin)</button>
         <div id="result"></div>
-        
+
         <div class="reset-buttons-group">
             <button class="reset-coins-btn" onclick="resetCoinsOnly()">Reset Coins (0)</button>
             <button class="reset-data-btn" onclick="resetData()">Reset All Data</button>
@@ -257,14 +286,28 @@
     <script>
         let savedCoins = localStorage.getItem('studyCoins');
         let studyCoins = savedCoins !== null ? parseFloat(savedCoins) : 0;
-        
+
         let totalHoursStudied = parseFloat(localStorage.getItem('totalHoursStudied')) || 0;
 
+        // Rewards are now { text, overridden } internally so overrides survive deletes.
+        // We migrate the old string-array format automatically.
         let savedRewards = localStorage.getItem('studyRewards');
-        let rewards = savedRewards ? JSON.parse(savedRewards) : ["15m YouTube", "Snack Break", "Episode of Show", "10m Walk"];
-        
+        let rewards = [];
+        if (savedRewards) {
+            try {
+                const parsed = JSON.parse(savedRewards);
+                if (Array.isArray(parsed)) {
+                    rewards = parsed.map(r =>
+                        typeof r === 'string'
+                            ? { text: r, overridden: false }
+                            : { text: r.text, overridden: !!r.overridden }
+                    );
+                }
+            } catch (e) { /* ignore, fall through */ }
+        }
         if (!rewards || rewards.length <= 1) {
-            rewards = ["15m YouTube", "Snack Break", "Episode of Show", "10m Walk"];
+            rewards = ["15m YouTube", "Snack Break", "Episode of Show", "10m Walk"]
+                .map(t => ({ text: t, overridden: false }));
         }
 
         let timerInterval = null;
@@ -325,7 +368,32 @@
             list.innerHTML = "";
             rewards.forEach((reward, index) => {
                 const li = document.createElement("li");
-                li.innerHTML = `${reward} <button class="delete-btn" onclick="deleteReward(${index})">Delete</button>`;
+                if (reward.overridden) li.classList.add("overridden");
+
+                // Name on the left
+                const nameSpan = document.createElement("span");
+                nameSpan.className = "reward-name";
+                nameSpan.innerText = reward.text + (reward.overridden ? " ✓" : "");
+                li.appendChild(nameSpan);
+
+                // Override button (NEW)
+                const overrideBtn = document.createElement("button");
+                overrideBtn.className = "override-btn";
+                overrideBtn.innerText = reward.overridden ? "Overridden" : "Override";
+                overrideBtn.disabled = reward.overridden || isSpinning;
+                overrideBtn.title = reward.overridden
+                    ? "Already claimed override coin for this reward"
+                    : "Already did this? Claim +1 coin";
+                overrideBtn.onclick = () => overrideReward(index);
+                li.appendChild(overrideBtn);
+
+                // Delete button (unchanged behaviour)
+                const delBtn = document.createElement("button");
+                delBtn.className = "delete-btn";
+                delBtn.innerText = "Delete";
+                delBtn.onclick = () => deleteReward(index);
+                li.appendChild(delBtn);
+
                 list.appendChild(li);
             });
 
@@ -335,7 +403,7 @@
         function updateSpinnerUI(activeIndex = -1) {
             const spinnerBox = document.getElementById("spinner-box");
             spinnerBox.innerHTML = "";
-            
+
             if (rewards.length === 0) {
                 spinnerBox.innerHTML = "<p style='color: #888;'>No rewards added yet!</p>";
                 return;
@@ -344,7 +412,7 @@
             rewards.forEach((reward, index) => {
                 const div = document.createElement("div");
                 div.className = "spinner-item" + (index === activeIndex ? " active" : "");
-                div.innerText = reward;
+                div.innerText = reward.text;
                 spinnerBox.appendChild(div);
             });
         }
@@ -352,9 +420,9 @@
         function addReward() {
             const input = document.getElementById("reward-input");
             const text = input.value.trim();
-            
+
             if (text !== "") {
-                rewards.push(text);
+                rewards.push({ text, overridden: false });
                 input.value = "";
                 saveData();
                 updateUI();
@@ -365,6 +433,20 @@
             rewards.splice(index, 1);
             saveData();
             updateUI();
+        }
+
+        /* NEW: override — grants 1 coin if this reward was done externally */
+        function overrideReward(index) {
+            const reward = rewards[index];
+            if (!reward || reward.overridden) return;
+
+            reward.overridden = true;
+            studyCoins += 1;
+
+            saveData();
+            updateUI();
+            document.getElementById("result").innerText =
+                `✅ Override claimed: +1 coin for "${reward.text}"`;
         }
 
         function spinWheel() {
@@ -394,7 +476,7 @@
 
             function animateSpin() {
                 updateSpinnerUI(currentIndex);
-                
+
                 currentIndex = (currentIndex + 1) % rewards.length;
                 step++;
 
@@ -405,7 +487,8 @@
                     setTimeout(animateSpin, speed);
                 } else {
                     updateSpinnerUI(winningIndex);
-                    document.getElementById("result").innerText = `🎉 Reward Won: ${rewards[winningIndex]}!`;
+                    document.getElementById("result").innerText =
+                        `🎉 Reward Won: ${rewards[winningIndex].text}!`;
                     isSpinning = false;
                 }
             }
@@ -439,4 +522,3 @@
 </body>
 
 </html>
-
