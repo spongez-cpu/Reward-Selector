@@ -1,5 +1,5 @@
 const CACHE_NAME = 'study-rewards-v1';
-const ASSETS = ['./index.html', './manifest.webmanifest', './icon-192.png'];
+const ASSETS = ['./index.html', './manifest.webmanifest', './IMG_2097.jpeg'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
