@@ -464,6 +464,9 @@
 
         // Initialize UI on load
         updateUI();
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('sw.js');
+        }
     </script>
 </body>
 
