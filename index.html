@@ -204,7 +204,7 @@
         </div>
 
         <div class="input-area">
-            <input type="text" id="unit-input" placeholder="Add unit (e.g. Math, History)">
+            <input type="text" id="unit-input" placeholder="Add unit (e.g. ECE2072,FIT3155,MTH3170)">
             <button onclick="addUnit()" style="background-color: #3498db;">Add</button>
         </div>
 
@@ -258,10 +258,7 @@
         let isSpinning = false;
 
         // --- NEW: UNIT TIMER DATA ---
-        let units = JSON.parse(localStorage.getItem('studyUnits')) || [
-            { name: "Math", hours: 0 }, 
-            { name: "Science", hours: 0 }
-        ];
+        let units = JSON.parse(localStorage.getItem('studyUnits'));
         let activeUnitIndex = -1; // -1 means none selected
         let unitTimerInterval = null;
         let unitSecondsElapsed = 0;
