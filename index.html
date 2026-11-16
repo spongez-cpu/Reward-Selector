@@ -286,7 +286,7 @@
         let totalHoursStudied = parseFloat(localStorage.getItem('totalHoursStudied')) || 0;
 
         let savedRewards = localStorage.getItem('studyRewards');
-        let rewards = savedRewards ? JSON.parse(savedRewards) : ["15m YouTube", "Snack Break", "Episode of Show", "10m Walk"];
+        let rewards = savedRewards ? JSON.parse(savedRewards) : [];
 
         if (!rewards || rewards.length <= 1) {
             rewards = [];
