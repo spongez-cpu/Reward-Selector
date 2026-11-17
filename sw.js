@@ -1,4 +1,4 @@
-const CACHE_NAME = 'study-rewards-v1';
+const CACHE_NAME = 'study-rewards-v2';
 const ASSETS = [
   './',
   './index.html',
