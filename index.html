@@ -61,22 +61,7 @@
 
         button:hover { opacity: 0.9; }
 
-        ul { list-style: none; padding: 0; text-align: left; }
-
-        li {
-            background: #f9f9f9;
-            padding: 12px;
-            margin-bottom: 8px;
-            border-radius: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 5px solid #3498db;
-        }
-
-        .delete-btn { background-color: #e74c3c; padding: 5px 10px; font-size: 12px; }
-        .delete-btn:hover { background-color: #c0392b; }
-
+        /* Unified Timer Styles */
         .stats-box {
             background: #e8f8f5;
             border: 2px solid #1abc9c;
@@ -97,7 +82,6 @@
         }
         .override-btn:hover { background-color: #d68910; }
 
-        /* Unified Timer Styles */
         .timer-display {
             font-size: 36px;
             font-weight: bold;
@@ -112,22 +96,66 @@
         #stop-timer-btn { background-color: #e74c3c; }
         #stop-timer-btn:hover { background-color: #c0392b; }
 
-        .tracking-box {
-            background: #eaf2f8;
-            border: 2px solid #3498db;
-            padding: 10px;
-            border-radius: 8px;
+        /* Subject Dropdown / Selector */
+        .subject-selector-row {
+            display: flex;
+            gap: 10px;
             margin-bottom: 15px;
-            color: #2980b9;
-            font-weight: bold;
-            font-size: 14px;
-            transition: background 0.3s, border-color 0.3s;
-        }
-        .tracking-box.subject-active {
             background: #fdf2e9;
-            border-color: #e67e22;
-            color: #d35400;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e67e22;
         }
+
+        .subject-selector-row select {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .add-subject-btn {
+            background-color: #3498db;
+            padding: 10px 15px;
+            white-space: nowrap;
+        }
+
+        /* Modals for adding items */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 350px;
+            text-align: center;
+        }
+
+        /* Lists */
+        ul { list-style: none; padding: 0; text-align: left; }
+        li {
+            background: #f9f9f9;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid #3498db;
+        }
+        .delete-btn { background-color: #e74c3c; padding: 5px 10px; font-size: 12px; }
+        .delete-btn:hover { background-color: #c0392b; }
 
         /* Spinner */
         .spinner-box {
@@ -140,7 +168,6 @@
             border-radius: 8px;
             border: 3px solid #3498db;
         }
-
         .spinner-item {
             background: white;
             border: 2px solid #ddd;
@@ -152,7 +179,6 @@
             text-align: center;
             transition: all 0.1s ease;
         }
-
         .spinner-item.active {
             border: 3px solid #3498db;
             background-color: #ebf5fb;
@@ -160,10 +186,8 @@
             transform: scale(1.02);
             box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
         }
-
         #spin-btn { background-color: #9b59b6; width: 100%; margin-top: 5px; }
         #spin-btn:hover { background-color: #8e44ad; }
-
         #result { font-weight: bold; color: #8e44ad; margin-top: 15px; font-size: 18px; }
 
         .reset-buttons-group { display: flex; gap: 10px; margin-top: 10px; }
@@ -173,21 +197,17 @@
         .reset-data-btn { background-color: #95a5a6; }
         .reset-data-btn:hover { background-color: #7f8c8d; }
 
-        /* Subjects List */
-        .subject-list li { border-left-color: #e67e22; cursor: pointer; }
-        .subject-list li.active-subject { border-left-color: #c0392b; background-color: #fdf2e9; }
-        .subject-label { font-weight: bold; color: #333; }
-        .subject-hours { color: #e67e22; font-size: 13px; }
-        .deselect-btn { background-color: #95a5a6; padding: 5px 10px; font-size: 12px; margin-left: 5px; }
-        .deselect-btn:hover { background-color: #7f8c8d; }
+        /* Subject List in UI */
+        .subject-hours { color: #e67e22; font-size: 13px; font-weight: bold; }
     </style>
 </head>
 
 <body>
 
-    <!-- UNIFIED TIMER -->
+    <!-- UNIFIED TIMER & SUBJECT TRACKER -->
     <div class="container">
         <h1>Study Timer ⏱️</h1>
+        
         <div class="stats-box">
             Coins Available: <span id="coin-count">0</span> 🪙<br>
             <span style="font-size: 14px; color: #666; font-weight: normal;">Total Hours Studied: <span id="total-hours">0</span>h</span>
@@ -196,8 +216,13 @@
             </div>
         </div>
 
-        <div class="tracking-box" id="tracking-box">
-            Tracking: <span id="current-tracker-name">General Study</span>
+        <!-- Subject Selector inside the timer box -->
+        <div class="subject-selector-row">
+            <select id="subject-dropdown" onchange="changeSubject()">
+                <option value="-1">General Study (No Subject)</option>
+                <!-- Options injected via JS -->
+            </select>
+            <button class="add-subject-btn" onclick="openSubjectModal()">+ Add</button>
         </div>
 
         <div class="timer-display" id="timer-display">00:00:00</div>
@@ -207,18 +232,9 @@
             <button id="stop-timer-btn" onclick="stopAndClaimTimer()">Finish & Claim</button>
         </div>
         <p style="font-size: 13px; color: #666; margin-top: 5px;">(1 Hour studied = 1 Reward Coin)</p>
-    </div>
 
-    <!-- SUBJECTS -->
-    <div class="container">
-        <h1>Subjects 📚</h1>
-        <p style="font-size: 13px; color: #666; margin-top: -10px; margin-bottom: 15px;">Select a subject below to track specific time. Click it again to deselect and return to General Study.</p>
-        
-        <div class="input-area">
-            <input type="text" id="unit-input" placeholder="Add subject (e.g. ECE2072)">
-            <button onclick="addUnit()" style="background-color: #3498db;">Add</button>
-        </div>
-        <ul id="unit-list" class="subject-list"></ul>
+        <!-- Show subjects and their hours right under the timer -->
+        <ul id="subject-list" style="margin-top: 25px; font-size: 14px;"></ul>
     </div>
 
     <!-- REWARDS -->
@@ -244,29 +260,34 @@
         </div>
     </div>
 
+    <!-- ADD SUBJECT MODAL -->
+    <div class="modal" id="subject-modal">
+        <div class="modal-content">
+            <h2 style="margin-top: 0; color: #333;">Add Subject</h2>
+            <input type="text" id="new-subject-input" placeholder="e.g. ECE2072" style="width: 100%; box-sizing: border-box; margin-bottom: 15px;">
+            <div style="display: flex; gap: 10px;">
+                <button onclick="closeSubjectModal()" style="background-color: #95a5a6; flex: 1;">Cancel</button>
+                <button onclick="confirmAddSubject()" style="flex: 1;">Add</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- STATE ---
         let studyCoins = parseFloat(localStorage.getItem('studyCoins')) || 0;
         let totalHoursStudied = parseFloat(localStorage.getItem('totalHoursStudied')) || 0;
         
         let rewards = [];
-        try {
-            const saved = localStorage.getItem('studyRewards');
-            if (saved) rewards = JSON.parse(saved);
-        } catch(e) {}
-
+        try { rewards = JSON.parse(localStorage.getItem('studyRewards')) || []; } catch(e) {}
+        
         let units = [];
-        try {
-            const saved = localStorage.getItem('studyUnits');
-            if (saved) units = JSON.parse(saved);
-        } catch(e) {}
+        try { units = JSON.parse(localStorage.getItem('studyUnits')) || []; } catch(e) {}
         
         let secondsElapsed = 0;
         let timerInterval = null;
         let isStudying = false;
         let isSpinning = false;
-
-        let activeUnitIndex = -1; // -1 means General Study
+        let activeUnitIndex = -1; 
 
         // --- TIMER LOGIC ---
         function toggleTimer() {
@@ -275,6 +296,9 @@
                 isStudying = true;
                 btn.innerText = "Pause";
                 btn.style.backgroundColor = "#e67e22";
+                // Lock the dropdown while studying so they can't switch mid-session
+                document.getElementById("subject-dropdown").disabled = true;
+                
                 timerInterval = setInterval(() => {
                     secondsElapsed++;
                     updateTimerDisplay();
@@ -293,6 +317,7 @@
             isStudying = false;
             document.getElementById("start-timer-btn").innerText = "Start Study";
             document.getElementById("start-timer-btn").style.backgroundColor = "#2ecc71";
+            document.getElementById("subject-dropdown").disabled = false;
 
             const hoursEarned = secondsElapsed / 3600;
             
@@ -318,44 +343,51 @@
             document.getElementById("timer-display").innerText = `${hrs}:${mins}:${secs}`;
         }
 
-        // --- SUBJECTS ---
-        function addUnit() {
-            const input = document.getElementById("unit-input");
-            const text = input.value.trim();
+        function changeSubject() {
+            const dropdown = document.getElementById("subject-dropdown");
+            activeUnitIndex = parseInt(dropdown.value);
+        }
+
+        // --- MODAL LOGIC ---
+        function openSubjectModal() {
+            if (isStudying) {
+                alert("Please pause or finish the timer before adding a subject.");
+                return;
+            }
+            document.getElementById("new-subject-input").value = "";
+            document.getElementById("subject-modal").style.display = "flex";
+            document.getElementById("new-subject-input").focus();
+        }
+
+        function closeSubjectModal() {
+            document.getElementById("subject-modal").style.display = "none";
+        }
+
+        function confirmAddSubject() {
+            const text = document.getElementById("new-subject-input").value.trim();
             if (text !== "") {
                 units.push({ name: text, hours: 0 });
-                input.value = "";
+                closeSubjectModal();
                 saveData();
                 updateUI();
+                // Auto-select the newly added subject
+                document.getElementById("subject-dropdown").value = units.length - 1;
+                activeUnitIndex = units.length - 1;
             }
         }
 
+        // --- SUBJECT LIST ---
         function deleteUnit(index, event) {
-            event.stopPropagation(); // Stop click from selecting the row
+            event.stopPropagation();
             if (activeUnitIndex === index) {
-                // If deleting the active subject, switch back to general
                 if (isStudying) stopAndClaimTimer(); 
                 activeUnitIndex = -1;
+                document.getElementById("subject-dropdown").value = "-1";
             } else if (activeUnitIndex > index) {
                 activeUnitIndex--;
             }
             units.splice(index, 1);
             saveData();
-            updateUI();
-        }
-
-        function toggleUnit(index) {
-            if (isStudying) {
-                alert("Please finish your current session before switching subjects.");
-                return;
-            }
-            
-            // If clicking the same one, deselect it (go to general)
-            if (activeUnitIndex === index) {
-                activeUnitIndex = -1;
-            } else {
-                activeUnitIndex = index;
-            }
             updateUI();
         }
 
@@ -384,41 +416,36 @@
             document.getElementById("result").innerText = "✅ Override used: +1 coin";
         }
 
-        // --- UI ---
+        // --- UI UPDATE ---
         function updateUI() {
             document.getElementById("coin-count").innerText = studyCoins.toFixed(2);
             document.getElementById("total-hours").innerText = totalHoursStudied.toFixed(2);
 
-            // Update Tracker Banner
-            const trackerBox = document.getElementById("tracking-box");
-            const trackerName = document.getElementById("current-tracker-name");
-            if (activeUnitIndex === -1) {
-                trackerName.innerText = "General Study";
-                trackerBox.classList.remove("subject-active");
-            } else {
-                trackerName.innerText = units[activeUnitIndex].name;
-                trackerBox.classList.add("subject-active");
-            }
+            // Update Dropdown
+            const dropdown = document.getElementById("subject-dropdown");
+            dropdown.innerHTML = '<option value="-1">General Study (No Subject)</option>';
+            units.forEach((unit, index) => {
+                const option = document.createElement("option");
+                option.value = index;
+                option.innerText = unit.name;
+                if (index === activeUnitIndex) option.selected = true;
+                dropdown.appendChild(option);
+            });
 
-            // Update Subject List
-            const unitList = document.getElementById("unit-list");
-            unitList.innerHTML = "";
+            // Update Subject List below timer
+            const subjectList = document.getElementById("subject-list");
+            subjectList.innerHTML = "";
             units.forEach((unit, index) => {
                 const li = document.createElement("li");
-                if (index === activeUnitIndex) li.classList.add("active-subject");
-                li.onclick = () => toggleUnit(index); 
-                
+                li.style.borderLeftColor = "#e67e22";
                 li.innerHTML = `
-                    <div>
-                        <span class="subject-label">${unit.name}</span><br>
-                        <span class="subject-hours">${unit.hours.toFixed(2)}h studied</span>
-                    </div>
-                    <div>
-                        ${index === activeUnitIndex ? '<button class="deselect-btn">Deselect</button>' : ''}
-                        <button class="delete-btn" onclick="deleteUnit(${index}, event)">X</button>
-                    </div>
+                    <span>${unit.name}</span>
+                    <span>
+                        <span class="subject-hours">${unit.hours.toFixed(2)}h</span>
+                        <button class="delete-btn" onclick="deleteUnit(${index}, event)" style="margin-left: 10px;">X</button>
+                    </span>
                 `;
-                unitList.appendChild(li);
+                subjectList.appendChild(li);
             });
 
             // Update Rewards List
