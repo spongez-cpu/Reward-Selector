@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Study Reward Selector</title>
 
+    <!-- PWA TAGS -->
     <link rel="manifest" href="manifest.webmanifest">
     <meta name="theme-color" content="#2ecc71">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -179,129 +180,86 @@
         .subject-hours { color: #e67e22; font-size: 13px; }
         .deselect-btn { background-color: #95a5a6; padding: 5px 10px; font-size: 12px; margin-left: 5px; }
         .deselect-btn:hover { background-color: #7f8c8d; }
-
-        /* Auth */
-        #auth-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; width: 100%; }
-        #auth-screen .container { max-width: 350px; }
-        .auth-input { width: 100%; margin-bottom: 10px; padding: 12px; box-sizing: border-box; }
-        .auth-btn { width: 100%; padding: 12px; margin-bottom: 10px; }
-        .auth-toggle { background: none; color: #3498db; border: none; font-size: 14px; cursor: pointer; text-decoration: underline; }
-        #app-screen { display: none; width: 100%; flex-direction: column; align-items: center; }
-        .top-bar { width: 100%; max-width: 450px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 10px 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); box-sizing: border-box; }
-        .top-bar span { font-weight: bold; color: #333; }
-        .logout-btn { background: #e74c3c; font-size: 12px; padding: 8px 12px; }
     </style>
 </head>
 
 <body>
 
-    <!-- LOGIN SCREEN -->
-    <div id="auth-screen">
-        <div class="container">
-            <h1>Study Rewards Login 🔒</h1>
-            <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Log in to sync your progress across all devices.</p>
-            <input type="email" id="email" class="auth-input" placeholder="Email" required>
-            <input type="password" id="password" class="auth-input" placeholder="Password" required>
-            <button id="login-btn" class="auth-btn" onclick="login()">Log In</button>
-            <button id="signup-btn" class="auth-btn" onclick="signup()" style="background-color: #3498db; display: none;">Sign Up</button>
-            <button id="toggle-auth" class="auth-toggle" onclick="toggleAuthMode()">Need an account? Sign up</button>
-            <p id="auth-error" style="color: #e74c3c; font-size: 13px; margin-top: 15px;"></p>
+    <!-- UNIFIED TIMER -->
+    <div class="container">
+        <h1>Study Timer ⏱️</h1>
+        <div class="stats-box">
+            Coins Available: <span id="coin-count">0</span> 🪙<br>
+            <span style="font-size: 14px; color: #666; font-weight: normal;">Total Hours Studied: <span id="total-hours">0</span>h</span>
+            <div>
+                <button class="override-btn" onclick="claimOverrideCoin()">Already did one? +1 Coin 🪙</button>
+            </div>
+        </div>
+
+        <div class="tracking-box" id="tracking-box">
+            Tracking: <span id="current-tracker-name">General Study</span>
+        </div>
+
+        <div class="timer-display" id="timer-display">00:00:00</div>
+
+        <div class="timer-buttons">
+            <button id="start-timer-btn" onclick="toggleTimer()">Start Study</button>
+            <button id="stop-timer-btn" onclick="stopAndClaimTimer()">Finish & Claim</button>
+        </div>
+        <p style="font-size: 13px; color: #666; margin-top: 5px;">(1 Hour studied = 1 Reward Coin)</p>
+    </div>
+
+    <!-- SUBJECTS -->
+    <div class="container">
+        <h1>Subjects 📚</h1>
+        <p style="font-size: 13px; color: #666; margin-top: -10px; margin-bottom: 15px;">Select a subject below to track specific time. Click it again to deselect and return to General Study.</p>
+        
+        <div class="input-area">
+            <input type="text" id="unit-input" placeholder="Add subject (e.g. ECE2072)">
+            <button onclick="addUnit()" style="background-color: #3498db;">Add</button>
+        </div>
+        <ul id="unit-list" class="subject-list"></ul>
+    </div>
+
+    <!-- REWARDS -->
+    <div class="container">
+        <h1>Reward Menu 🎁</h1>
+        <div class="input-area">
+            <input type="text" id="reward-input" placeholder="Add reward (e.g., 15m YouTube)">
+            <button onclick="addReward()" style="background-color: #3498db;">Add</button>
+        </div>
+        <ul id="reward-list"></ul>
+    </div>
+
+    <!-- SPINNER -->
+    <div class="container">
+        <h1>Spin for Rewards! 🎰</h1>
+        <p>Cost to spin: <strong>1 Coin</strong></p>
+        <div class="spinner-box" id="spinner-box"></div>
+        <button id="spin-btn" onclick="spinWheel()">Spin the List! (-1 Coin)</button>
+        <div id="result"></div>
+        <div class="reset-buttons-group">
+            <button class="reset-coins-btn" onclick="resetCoinsOnly()">Reset Coins (0)</button>
+            <button class="reset-data-btn" onclick="resetData()">Reset All Data</button>
         </div>
     </div>
 
-    <!-- MAIN APP -->
-    <div id="app-screen">
-        <div class="top-bar">
-            <span>👋 <span id="user-email-display"></span></span>
-            <button class="logout-btn" onclick="logout()">Log Out</button>
-        </div>
-
-        <!-- UNIFIED TIMER -->
-        <div class="container">
-            <h1>Study Timer ⏱️</h1>
-            <div class="stats-box">
-                Coins Available: <span id="coin-count">0</span> 🪙<br>
-                <span style="font-size: 14px; color: #666; font-weight: normal;">Total Hours Studied: <span id="total-hours">0</span>h</span>
-                <div>
-                    <button class="override-btn" onclick="claimOverrideCoin()">Already did one? +1 Coin 🪙</button>
-                </div>
-            </div>
-
-            <div class="tracking-box" id="tracking-box">
-                Tracking: <span id="current-tracker-name">General Study</span>
-            </div>
-
-            <div class="timer-display" id="timer-display">00:00:00</div>
-
-            <div class="timer-buttons">
-                <button id="start-timer-btn" onclick="toggleTimer()">Start Study</button>
-                <button id="stop-timer-btn" onclick="stopAndClaimTimer()">Finish & Claim</button>
-            </div>
-            <p style="font-size: 13px; color: #666; margin-top: 5px;">(1 Hour studied = 1 Reward Coin)</p>
-        </div>
-
-        <!-- SUBJECTS -->
-        <div class="container">
-            <h1>Subjects 📚</h1>
-            <p style="font-size: 13px; color: #666; margin-top: -10px; margin-bottom: 15px;">Select a subject below to track specific time. Click it again to deselect and return to General Study.</p>
-            
-            <div class="input-area">
-                <input type="text" id="unit-input" placeholder="Add subject (e.g. ECE2072)">
-                <button onclick="addUnit()" style="background-color: #3498db;">Add</button>
-            </div>
-            <ul id="unit-list" class="subject-list"></ul>
-        </div>
-
-        <!-- REWARDS -->
-        <div class="container">
-            <h1>Reward Menu 🎁</h1>
-            <div class="input-area">
-                <input type="text" id="reward-input" placeholder="Add reward (e.g., 15m YouTube)">
-                <button onclick="addReward()" style="background-color: #3498db;">Add</button>
-            </div>
-            <ul id="reward-list"></ul>
-        </div>
-
-        <!-- SPINNER -->
-        <div class="container">
-            <h1>Spin for Rewards! 🎰</h1>
-            <p>Cost to spin: <strong>1 Coin</strong></p>
-            <div class="spinner-box" id="spinner-box"></div>
-            <button id="spin-btn" onclick="spinWheel()">Spin the List! (-1 Coin)</button>
-            <div id="result"></div>
-            <div class="reset-buttons-group">
-                <button class="reset-coins-btn" onclick="resetCoinsOnly()">Reset Coins (0)</button>
-                <button class="reset-data-btn" onclick="resetData()">Reset All Data</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- FIREBASE SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        // --- REPLACE WITH YOUR FIREBASE CONFIG ---
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // --- STATE VARIABLES ---
-        let currentUser = null;
-        let studyCoins = 0;
-        let totalHoursStudied = 0;
+    <script>
+        // --- STATE ---
+        let studyCoins = parseFloat(localStorage.getItem('studyCoins')) || 0;
+        let totalHoursStudied = parseFloat(localStorage.getItem('totalHoursStudied')) || 0;
+        
         let rewards = [];
-        let units = []; // array of { name, hours }
+        try {
+            const saved = localStorage.getItem('studyRewards');
+            if (saved) rewards = JSON.parse(saved);
+        } catch(e) {}
+
+        let units = [];
+        try {
+            const saved = localStorage.getItem('studyUnits');
+            if (saved) units = JSON.parse(saved);
+        } catch(e) {}
         
         let secondsElapsed = 0;
         let timerInterval = null;
@@ -309,96 +267,9 @@
         let isSpinning = false;
 
         let activeUnitIndex = -1; // -1 means General Study
-        let isLoginMode = true;
 
-        // --- AUTHENTICATION ---
-        window.toggleAuthMode = () => {
-            isLoginMode = !isLoginMode;
-            document.getElementById("login-btn").style.display = isLoginMode ? "block" : "none";
-            document.getElementById("signup-btn").style.display = isLoginMode ? "none" : "block";
-            document.getElementById("toggle-auth").innerText = isLoginMode ? "Need an account? Sign up" : "Already have an account? Log in";
-            document.getElementById("auth-error").innerText = "";
-        };
-
-        window.login = async () => {
-            const email = document.getElementById("email").value;
-            const pass = document.getElementById("password").value;
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-            } catch (error) {
-                document.getElementById("auth-error").innerText = error.message;
-            }
-        };
-
-        window.signup = async () => {
-            const email = document.getElementById("email").value;
-            const pass = document.getElementById("password").value;
-            try {
-                await createUserWithEmailAndPassword(auth, email, pass);
-            } catch (error) {
-                document.getElementById("auth-error").innerText = error.message;
-            }
-        };
-
-        window.logout = () => signOut(auth);
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUser = user;
-                document.getElementById("auth-screen").style.display = "none";
-                document.getElementById("app-screen").style.display = "flex";
-                document.getElementById("user-email-display").innerText = user.email;
-                await loadCloudData();
-            } else {
-                currentUser = null;
-                document.getElementById("auth-screen").style.display = "flex";
-                document.getElementById("app-screen").style.display = "none";
-            }
-        });
-
-        // --- DATABASE SYNC ---
-        async function loadCloudData() {
-            if (!currentUser) return;
-            const docRef = doc(db, "users", currentUser.uid);
-            const docSnap = await getDoc(docRef);
-
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                studyCoins = data.studyCoins || 0;
-                totalHoursStudied = data.totalHoursStudied || 0;
-                rewards = data.rewards || [];
-                units = data.units || [];
-            } else {
-                studyCoins = 0;
-                totalHoursStudied = 0;
-                rewards = [];
-                units = [];
-                await saveData();
-            }
-            updateUI();
-        }
-
-        async function saveData() {
-            if (!currentUser) return;
-            // Instantly update UI counters
-            document.getElementById("coin-count").innerText = studyCoins.toFixed(2);
-            document.getElementById("total-hours").innerText = totalHoursStudied.toFixed(2);
-
-            // Save to Cloud
-            try {
-                await setDoc(doc(db, "users", currentUser.uid), {
-                    studyCoins: studyCoins,
-                    totalHoursStudied: totalHoursStudied,
-                    rewards: rewards,
-                    units: units
-                });
-            } catch (e) {
-                console.error("Error saving data:", e);
-            }
-        }
-
-        // --- UNIFIED TIMER LOGIC ---
-        window.toggleTimer = () => {
+        // --- TIMER LOGIC ---
+        function toggleTimer() {
             const btn = document.getElementById("start-timer-btn");
             if (!isStudying) {
                 isStudying = true;
@@ -414,9 +285,9 @@
                 btn.style.backgroundColor = "#2ecc71";
                 clearInterval(timerInterval);
             }
-        };
+        }
 
-        window.stopAndClaimTimer = () => {
+        function stopAndClaimTimer() {
             if (secondsElapsed === 0) return;
             clearInterval(timerInterval);
             isStudying = false;
@@ -425,7 +296,7 @@
 
             const hoursEarned = secondsElapsed / 3600;
             
-            // Add to global coins
+            // Add to global coins and total hours
             studyCoins += hoursEarned;
             totalHoursStudied += hoursEarned;
 
@@ -438,7 +309,7 @@
             updateTimerDisplay();
             saveData();
             updateUI();
-        };
+        }
 
         function updateTimerDisplay() {
             const hrs = Math.floor(secondsElapsed / 3600).toString().padStart(2, '0');
@@ -447,8 +318,8 @@
             document.getElementById("timer-display").innerText = `${hrs}:${mins}:${secs}`;
         }
 
-        // --- SUBJECT LOGIC ---
-        window.addUnit = () => {
+        // --- SUBJECTS ---
+        function addUnit() {
             const input = document.getElementById("unit-input");
             const text = input.value.trim();
             if (text !== "") {
@@ -457,9 +328,9 @@
                 saveData();
                 updateUI();
             }
-        };
+        }
 
-        window.deleteUnit = (index, event) => {
+        function deleteUnit(index, event) {
             event.stopPropagation(); // Stop click from selecting the row
             if (activeUnitIndex === index) {
                 // If deleting the active subject, switch back to general
@@ -471,9 +342,9 @@
             units.splice(index, 1);
             saveData();
             updateUI();
-        };
+        }
 
-        window.toggleUnit = (index) => {
+        function toggleUnit(index) {
             if (isStudying) {
                 alert("Please finish your current session before switching subjects.");
                 return;
@@ -486,9 +357,34 @@
                 activeUnitIndex = index;
             }
             updateUI();
-        };
+        }
 
-        // --- UI UPDATES ---
+        // --- REWARDS ---
+        function addReward() {
+            const input = document.getElementById("reward-input");
+            const text = input.value.trim();
+            if (text !== "") {
+                rewards.push(text);
+                input.value = "";
+                saveData();
+                updateUI();
+            }
+        }
+
+        function deleteReward(index) {
+            rewards.splice(index, 1);
+            saveData();
+            updateUI();
+        }
+
+        function claimOverrideCoin() {
+            studyCoins += 1;
+            saveData();
+            updateUI();
+            document.getElementById("result").innerText = "✅ Override used: +1 coin";
+        }
+
+        // --- UI ---
         function updateUI() {
             document.getElementById("coin-count").innerText = studyCoins.toFixed(2);
             document.getElementById("total-hours").innerText = totalHoursStudied.toFixed(2);
@@ -510,8 +406,7 @@
             units.forEach((unit, index) => {
                 const li = document.createElement("li");
                 if (index === activeUnitIndex) li.classList.add("active-subject");
-                
-                li.onclick = () => toggleUnit(index); // Clicking the row selects it
+                li.onclick = () => toggleUnit(index); 
                 
                 li.innerHTML = `
                     <div>
@@ -538,31 +433,7 @@
             updateSpinnerUI();
         }
 
-        window.addReward = () => {
-            const input = document.getElementById("reward-input");
-            const text = input.value.trim();
-            if (text !== "") {
-                rewards.push(text);
-                input.value = "";
-                saveData();
-                updateUI();
-            }
-        };
-
-        window.deleteReward = (index) => {
-            rewards.splice(index, 1);
-            saveData();
-            updateUI();
-        };
-
-        window.claimOverrideCoin = () => {
-            studyCoins += 1;
-            saveData();
-            updateUI();
-            document.getElementById("result").innerText = "✅ Override used: +1 coin";
-        };
-
-        // --- SPINNER LOGIC ---
+        // --- SPINNER ---
         function updateSpinnerUI(activeIndex = -1) {
             const spinnerBox = document.getElementById("spinner-box");
             spinnerBox.innerHTML = "";
@@ -578,7 +449,7 @@
             });
         }
 
-        window.spinWheel = () => {
+        function spinWheel() {
             if (isSpinning) return;
             if (studyCoins < 1) {
                 alert("Not enough coins! Study more to earn coins.");
@@ -617,27 +488,34 @@
                 }
             }
             animateSpin();
-        };
+        }
 
-        // --- RESET & UTILS ---
-        window.resetCoinsOnly = () => {
+        // --- SAVE & RESET ---
+        function saveData() {
+            localStorage.setItem('studyCoins', studyCoins);
+            localStorage.setItem('totalHoursStudied', totalHoursStudied);
+            localStorage.setItem('studyRewards', JSON.stringify(rewards));
+            localStorage.setItem('studyUnits', JSON.stringify(units));
+        }
+
+        function resetCoinsOnly() {
             studyCoins = 0;
             saveData();
             updateUI();
             document.getElementById("result").innerText = "Coins reset to 0!";
-        };
+        }
 
-        window.resetData = () => {
+        function resetData() {
             if (confirm("Are you sure you want to reset all data and coins?")) {
-                studyCoins = 0;
-                totalHoursStudied = 0;
-                rewards = [];
-                units = [];
-                saveData();
-                updateUI();
+                localStorage.clear();
+                location.reload();
             }
-        };
+        }
 
+        // Initialize
+        updateUI();
+
+        // PWA Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
         }
