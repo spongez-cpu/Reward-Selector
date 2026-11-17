@@ -41,35 +41,17 @@
         .input-area { display: flex; gap: 10px; margin-bottom: 20px; }
 
         input {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
+            flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 16px;
         }
 
         button {
-            background-color: #2ecc71;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
+            background-color: #2ecc71; color: white; border: none; padding: 10px 15px;
+            border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold;
         }
-
         button:hover { opacity: 0.9; }
 
         /* --- PROFILE SCREEN --- */
-        #profile-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 80vh;
-            width: 100%;
-        }
+        #profile-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; width: 100%; }
         .profile-input { width: 100%; margin-bottom: 15px; padding: 12px; box-sizing: border-box; text-align: center; font-size: 18px;}
         
         /* --- MAIN APP --- */
@@ -134,24 +116,25 @@
 
         .subject-hours { color: #e67e22; font-size: 13px; font-weight: bold; }
 
-        /* Modal */
+        /* Daily History Styles */
+        .daily-box {
+            background: #f4f6f7; border: 2px solid #bdc3c7; border-radius: 8px; padding: 15px; margin-top: 15px;
+        }
+        .daily-box h3 { margin: 0 0 10px 0; color: #7f8c8d; font-size: 14px; text-transform: uppercase; }
+        .history-list li { border-left-color: #95a5a6; font-size: 14px; background: white; }
+        .today-total { font-size: 16px; color: #2980b9; font-weight: bold; margin-bottom: 10px; }
+
+        /* Modal & Loading */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
         .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 350px; text-align: center; }
-        
-        /* Loading Overlay */
-        #loading-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.8); z-index: 1000; justify-content: center; align-items: center; font-size: 20px; font-weight: bold; color: #2ecc71;
-        }
+        #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 1000; justify-content: center; align-items: center; font-size: 20px; font-weight: bold; color: #2ecc71; }
     </style>
 </head>
 
 <body>
 
-    <!-- LOADING OVERLAY -->
     <div id="loading-overlay">Syncing with Cloud... ☁️</div>
 
-    <!-- PROFILE SELECTION SCREEN -->
     <div id="profile-screen">
         <div class="container">
             <h1>Who's Studying? 👤</h1>
@@ -162,7 +145,6 @@
         </div>
     </div>
 
-    <!-- MAIN APP -->
     <div id="app-screen">
         <div class="top-bar">
             <span>👤 <span id="username-display"></span></span>
@@ -175,7 +157,7 @@
             
             <div class="stats-box">
                 Coins Available: <span id="coin-count">0</span> 🪙<br>
-                <span style="font-size: 14px; color: #666; font-weight: normal;">Total Hours Studied: <span id="total-hours">0</span>h</span>
+                <span style="font-size: 14px; color: #666; font-weight: normal;">Total Lifetime Hours: <span id="total-hours">0</span>h</span>
                 <div>
                     <button class="override-btn" onclick="claimOverrideCoin()">Already did one? +1 Coin 🪙</button>
                 </div>
@@ -197,6 +179,13 @@
             <p style="font-size: 13px; color: #666; margin-top: 5px;">(1 Hour studied = 1 Reward Coin)</p>
 
             <ul id="subject-list" style="margin-top: 25px; font-size: 14px;"></ul>
+
+            <!-- NEW: DAILY HISTORY -->
+            <div class="daily-box">
+                <h3>Daily Study Record</h3>
+                <div class="today-total">Today's Total: <span id="today-hours">0.00</span>h</div>
+                <ul id="history-list" class="history-list"></ul>
+            </div>
         </div>
 
         <!-- REWARDS -->
@@ -262,6 +251,11 @@
         let rewards = [];
         let units = [];
         
+        // NEW: Daily History State
+        let dailyHistory = {}; // Format: { "2023-10-24": 2.5, "2023-10-25": 1.2 }
+        let todayDate = new Date().toLocaleDateString('en-CA'); // Format: YYYY-MM-DD
+        let todayHours = 0;
+
         let secondsElapsed = 0;
         let timerInterval = null;
         let isStudying = false;
@@ -275,12 +269,9 @@
             const input = document.getElementById("username-input").value.trim();
             if (!input) return alert("Please enter a username.");
             
-            // Sanitize username for database document ID (no spaces/special chars)
             currentUser = input.toLowerCase().replace(/[^a-z0-9]/g, ""); 
-            
             if (!currentUser) return alert("Username must contain letters or numbers.");
 
-            // Show loading
             document.getElementById("loading-overlay").style.display = "flex";
             document.getElementById("sync-error").innerText = "";
 
@@ -294,16 +285,15 @@
                     totalHoursStudied = data.totalHoursStudied || 0;
                     rewards = data.rewards || [];
                     units = data.units || [];
+                    dailyHistory = data.dailyHistory || {};
                 } else {
-                    // New user profile
-                    studyCoins = 0;
-                    totalHoursStudied = 0;
-                    rewards = [];
-                    units = [];
+                    studyCoins = 0; totalHoursStudied = 0; rewards = []; units = []; dailyHistory = {};
                     await saveData();
                 }
 
-                // Update UI
+                // Initialize Today's Hours
+                todayHours = dailyHistory[todayDate] || 0;
+
                 document.getElementById("username-display").innerText = input;
                 document.getElementById("profile-screen").style.display = "none";
                 document.getElementById("app-screen").style.display = "flex";
@@ -337,7 +327,8 @@
                     studyCoins: studyCoins,
                     totalHoursStudied: totalHoursStudied,
                     rewards: rewards,
-                    units: units
+                    units: units,
+                    dailyHistory: dailyHistory
                 });
             } catch (e) {
                 console.error("Error saving data:", e);
@@ -375,12 +366,25 @@
 
             const hoursEarned = secondsElapsed / 3600;
             
+            // Add to global stats
             studyCoins += hoursEarned;
             totalHoursStudied += hoursEarned;
-
+            
+            // Add to specific subject
             if (activeUnitIndex !== -1 && units[activeUnitIndex]) {
                 units[activeUnitIndex].hours += hoursEarned;
             }
+
+            // NEW: Add to Daily History
+            // Check if the date changed while the timer was running (e.g., midnight strike)
+            const currentDateCheck = new Date().toLocaleDateString('en-CA');
+            if (currentDateCheck !== todayDate) {
+                todayDate = currentDateCheck; // Reset date
+                todayHours = 0; // Reset today's counter
+            }
+            
+            todayHours += hoursEarned;
+            dailyHistory[todayDate] = todayHours;
 
             secondsElapsed = 0;
             updateTimerDisplay();
@@ -472,6 +476,32 @@
             document.getElementById("coin-count").innerText = studyCoins.toFixed(2);
             document.getElementById("total-hours").innerText = totalHoursStudied.toFixed(2);
 
+            // Update Daily History UI
+            document.getElementById("today-hours").innerText = todayHours.toFixed(2);
+            
+            const historyList = document.getElementById("history-list");
+            historyList.innerHTML = "";
+            
+            // Sort history by date descending (newest first)
+            const sortedDates = Object.keys(dailyHistory).sort((a, b) => new Date(b) - new Date(a));
+            
+            sortedDates.forEach(dateStr => {
+                if (dateStr === todayDate) return; // Skip today, we show it at the top
+                if (dailyHistory[dateStr] === 0) return; // Skip days with 0 hours
+                
+                const li = document.createElement("li");
+                // Format date nicely (e.g. "Oct 24, 2023")
+                const dateObj = new Date(dateStr + 'T00:00:00');
+                const formattedDate = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+                
+                li.innerHTML = `<span>${formattedDate}</span> <strong>${dailyHistory[dateStr].toFixed(2)}h</strong>`;
+                historyList.appendChild(li);
+            });
+
+            if (historyList.innerHTML === "") {
+                historyList.innerHTML = "<li style='color:#95a5a6; font-size:12px; border:none;'>No previous records yet.</li>";
+            }
+
             // Update Dropdown
             const dropdown = document.getElementById("subject-dropdown");
             dropdown.innerHTML = '<option value="-1">General Study</option>';
@@ -483,7 +513,7 @@
                 dropdown.appendChild(option);
             });
 
-            // Update Subject List below timer
+            // Update Subject List
             const subjectList = document.getElementById("subject-list");
             subjectList.innerHTML = "";
             units.forEach((unit, index) => {
@@ -582,12 +612,13 @@
                 totalHoursStudied = 0;
                 rewards = [];
                 units = [];
+                dailyHistory = {};
+                todayHours = 0;
                 saveData();
                 updateUI();
             }
         };
 
-        // PWA Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
         }
