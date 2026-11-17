@@ -61,131 +61,66 @@
 
         button:hover { opacity: 0.9; }
 
+        /* --- PROFILE SCREEN --- */
+        #profile-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            width: 100%;
+        }
+        .profile-input { width: 100%; margin-bottom: 15px; padding: 12px; box-sizing: border-box; text-align: center; font-size: 18px;}
+        
+        /* --- MAIN APP --- */
+        #app-screen { display: none; width: 100%; flex-direction: column; align-items: center; }
+        .top-bar {
+            width: 100%; max-width: 450px; display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 20px; background: white; padding: 10px 20px; border-radius: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); box-sizing: border-box;
+        }
+        .top-bar span { font-weight: bold; color: #333; }
+        .logout-btn { background: #95a5a6; font-size: 12px; padding: 8px 12px; }
+
         /* Unified Timer Styles */
         .stats-box {
-            background: #e8f8f5;
-            border: 2px solid #1abc9c;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 18px;
-            color: #16a085;
-            font-weight: bold;
+            background: #e8f8f5; border: 2px solid #1abc9c; padding: 15px; border-radius: 8px;
+            margin-bottom: 20px; font-size: 18px; color: #16a085; font-weight: bold;
         }
-
         .override-btn {
-            background-color: #f39c12;
-            padding: 8px 14px;
-            font-size: 14px;
-            width: 100%;
-            margin-top: 10px;
+            background-color: #f39c12; padding: 8px 14px; font-size: 14px; width: 100%; margin-top: 10px;
         }
         .override-btn:hover { background-color: #d68910; }
 
         .timer-display {
-            font-size: 36px;
-            font-weight: bold;
-            color: #333;
-            margin: 15px 0;
-            font-family: monospace;
+            font-size: 36px; font-weight: bold; color: #333; margin: 15px 0; font-family: monospace;
         }
-
         .timer-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
         .timer-buttons button { flex: 1; }
-
         #stop-timer-btn { background-color: #e74c3c; }
         #stop-timer-btn:hover { background-color: #c0392b; }
 
-        /* Subject Dropdown / Selector */
         .subject-selector-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            background: #fdf2e9;
-            padding: 15px;
-            border-radius: 8px;
-            border: 2px solid #e67e22;
+            display: flex; gap: 10px; margin-bottom: 15px; background: #fdf2e9; padding: 15px;
+            border-radius: 8px; border: 2px solid #e67e22;
         }
-
         .subject-selector-row select {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
-            background-color: white;
-            cursor: pointer;
+            flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 16px; background-color: white; cursor: pointer;
         }
+        .add-subject-btn { background-color: #3498db; padding: 10px 15px; white-space: nowrap; }
 
-        .add-subject-btn {
-            background-color: #3498db;
-            padding: 10px 15px;
-            white-space: nowrap;
-        }
-
-        /* Modals for adding items */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        .modal-content {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 350px;
-            text-align: center;
-        }
-
-        /* Lists */
         ul { list-style: none; padding: 0; text-align: left; }
         li {
-            background: #f9f9f9;
-            padding: 12px;
-            margin-bottom: 8px;
-            border-radius: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 5px solid #3498db;
+            background: #f9f9f9; padding: 12px; margin-bottom: 8px; border-radius: 6px;
+            display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #3498db;
         }
         .delete-btn { background-color: #e74c3c; padding: 5px 10px; font-size: 12px; }
         .delete-btn:hover { background-color: #c0392b; }
 
         /* Spinner */
-        .spinner-box {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin: 20px 0;
-            padding: 12px;
-            background: #fafafa;
-            border-radius: 8px;
-            border: 3px solid #3498db;
-        }
-        .spinner-item {
-            background: white;
-            border: 2px solid #ddd;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            color: #333;
-            text-align: center;
-            transition: all 0.1s ease;
-        }
-        .spinner-item.active {
-            border: 3px solid #3498db;
-            background-color: #ebf5fb;
-            color: #2980b9;
-            transform: scale(1.02);
-            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
-        }
+        .spinner-box { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; padding: 12px; background: #fafafa; border-radius: 8px; border: 3px solid #3498db; }
+        .spinner-item { background: white; border: 2px solid #ddd; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; color: #333; text-align: center; transition: all 0.1s ease; }
+        .spinner-item.active { border: 3px solid #3498db; background-color: #ebf5fb; color: #2980b9; transform: scale(1.02); box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3); }
         #spin-btn { background-color: #9b59b6; width: 100%; margin-top: 5px; }
         #spin-btn:hover { background-color: #8e44ad; }
         #result { font-weight: bold; color: #8e44ad; margin-top: 15px; font-size: 18px; }
@@ -197,66 +132,94 @@
         .reset-data-btn { background-color: #95a5a6; }
         .reset-data-btn:hover { background-color: #7f8c8d; }
 
-        /* Subject List in UI */
         .subject-hours { color: #e67e22; font-size: 13px; font-weight: bold; }
+
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 350px; text-align: center; }
+        
+        /* Loading Overlay */
+        #loading-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.8); z-index: 1000; justify-content: center; align-items: center; font-size: 20px; font-weight: bold; color: #2ecc71;
+        }
     </style>
 </head>
 
 <body>
 
-    <!-- UNIFIED TIMER & SUBJECT TRACKER -->
-    <div class="container">
-        <h1>Study Timer ⏱️</h1>
-        
-        <div class="stats-box">
-            Coins Available: <span id="coin-count">0</span> 🪙<br>
-            <span style="font-size: 14px; color: #666; font-weight: normal;">Total Hours Studied: <span id="total-hours">0</span>h</span>
-            <div>
-                <button class="override-btn" onclick="claimOverrideCoin()">Already did one? +1 Coin 🪙</button>
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay">Syncing with Cloud... ☁️</div>
+
+    <!-- PROFILE SELECTION SCREEN -->
+    <div id="profile-screen">
+        <div class="container">
+            <h1>Who's Studying? 👤</h1>
+            <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Enter your username to sync your data across devices.</p>
+            <input type="text" id="username-input" class="profile-input" placeholder="Username" autocomplete="off" onkeypress="handleEnter(event)">
+            <button onclick="loadProfile()" style="width: 100%; padding: 12px;">Enter / Sync</button>
+            <p id="sync-error" style="color: #e74c3c; font-size: 13px; margin-top: 15px;"></p>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="app-screen">
+        <div class="top-bar">
+            <span>👤 <span id="username-display"></span></span>
+            <button class="logout-btn" onclick="logoutProfile()">Switch User</button>
+        </div>
+
+        <!-- UNIFIED TIMER -->
+        <div class="container">
+            <h1>Study Timer ⏱️</h1>
+            
+            <div class="stats-box">
+                Coins Available: <span id="coin-count">0</span> 🪙<br>
+                <span style="font-size: 14px; color: #666; font-weight: normal;">Total Hours Studied: <span id="total-hours">0</span>h</span>
+                <div>
+                    <button class="override-btn" onclick="claimOverrideCoin()">Already did one? +1 Coin 🪙</button>
+                </div>
             </div>
+
+            <div class="subject-selector-row">
+                <select id="subject-dropdown" onchange="changeSubject()">
+                    <option value="-1">General Study (No Subject)</option>
+                </select>
+                <button class="add-subject-btn" onclick="openSubjectModal()">+ Add</button>
+            </div>
+
+            <div class="timer-display" id="timer-display">00:00:00</div>
+
+            <div class="timer-buttons">
+                <button id="start-timer-btn" onclick="toggleTimer()">Start Study</button>
+                <button id="stop-timer-btn" onclick="stopAndClaimTimer()">Finish & Claim</button>
+            </div>
+            <p style="font-size: 13px; color: #666; margin-top: 5px;">(1 Hour studied = 1 Reward Coin)</p>
+
+            <ul id="subject-list" style="margin-top: 25px; font-size: 14px;"></ul>
         </div>
 
-        <!-- Subject Selector inside the timer box -->
-        <div class="subject-selector-row">
-            <select id="subject-dropdown" onchange="changeSubject()">
-                <option value="-1">General Study (No Subject)</option>
-                <!-- Options injected via JS -->
-            </select>
-            <button class="add-subject-btn" onclick="openSubjectModal()">+ Add</button>
+        <!-- REWARDS -->
+        <div class="container">
+            <h1>Reward Menu 🎁</h1>
+            <div class="input-area">
+                <input type="text" id="reward-input" placeholder="Add reward (e.g., 15m YouTube)">
+                <button onclick="addReward()" style="background-color: #3498db;">Add</button>
+            </div>
+            <ul id="reward-list"></ul>
         </div>
 
-        <div class="timer-display" id="timer-display">00:00:00</div>
-
-        <div class="timer-buttons">
-            <button id="start-timer-btn" onclick="toggleTimer()">Start Study</button>
-            <button id="stop-timer-btn" onclick="stopAndClaimTimer()">Finish & Claim</button>
-        </div>
-        <p style="font-size: 13px; color: #666; margin-top: 5px;">(1 Hour studied = 1 Reward Coin)</p>
-
-        <!-- Show subjects and their hours right under the timer -->
-        <ul id="subject-list" style="margin-top: 25px; font-size: 14px;"></ul>
-    </div>
-
-    <!-- REWARDS -->
-    <div class="container">
-        <h1>Reward Menu 🎁</h1>
-        <div class="input-area">
-            <input type="text" id="reward-input" placeholder="Add reward (e.g., 15m YouTube)">
-            <button onclick="addReward()" style="background-color: #3498db;">Add</button>
-        </div>
-        <ul id="reward-list"></ul>
-    </div>
-
-    <!-- SPINNER -->
-    <div class="container">
-        <h1>Spin for Rewards! 🎰</h1>
-        <p>Cost to spin: <strong>1 Coin</strong></p>
-        <div class="spinner-box" id="spinner-box"></div>
-        <button id="spin-btn" onclick="spinWheel()">Spin the List! (-1 Coin)</button>
-        <div id="result"></div>
-        <div class="reset-buttons-group">
-            <button class="reset-coins-btn" onclick="resetCoinsOnly()">Reset Coins (0)</button>
-            <button class="reset-data-btn" onclick="resetData()">Reset All Data</button>
+        <!-- SPINNER -->
+        <div class="container">
+            <h1>Spin for Rewards! 🎰</h1>
+            <p>Cost to spin: <strong>1 Coin</strong></p>
+            <div class="spinner-box" id="spinner-box"></div>
+            <button id="spin-btn" onclick="spinWheel()">Spin the List! (-1 Coin)</button>
+            <div id="result"></div>
+            <div class="reset-buttons-group">
+                <button class="reset-coins-btn" onclick="resetCoinsOnly()">Reset Coins (0)</button>
+                <button class="reset-data-btn" onclick="resetData()">Reset All Data</button>
+            </div>
         </div>
     </div>
 
@@ -264,7 +227,7 @@
     <div class="modal" id="subject-modal">
         <div class="modal-content">
             <h2 style="margin-top: 0; color: #333;">Add Subject</h2>
-            <input type="text" id="new-subject-input" placeholder="e.g. ECE2072, FIT3155, MTH3170" style="width: 100%; box-sizing: border-box; margin-bottom: 15px;">
+            <input type="text" id="new-subject-input" placeholder="e.g. ECE2072" style="width: 100%; box-sizing: border-box; margin-bottom: 15px;">
             <div style="display: flex; gap: 10px;">
                 <button onclick="closeSubjectModal()" style="background-color: #95a5a6; flex: 1;">Cancel</button>
                 <button onclick="confirmAddSubject()" style="flex: 1;">Add</button>
@@ -272,16 +235,30 @@
         </div>
     </div>
 
-    <script>
+    <!-- FIREBASE SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // 1. PASTE YOUR FIREBASE CONFIG HERE
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
         // --- STATE ---
-        let studyCoins = parseFloat(localStorage.getItem('studyCoins')) || 0;
-        let totalHoursStudied = parseFloat(localStorage.getItem('totalHoursStudied')) || 0;
-        
+        let currentUser = "";
+        let studyCoins = 0;
+        let totalHoursStudied = 0;
         let rewards = [];
-        try { rewards = JSON.parse(localStorage.getItem('studyRewards')) || []; } catch(e) {}
-        
         let units = [];
-        try { units = JSON.parse(localStorage.getItem('studyUnits')) || []; } catch(e) {}
         
         let secondsElapsed = 0;
         let timerInterval = null;
@@ -289,14 +266,89 @@
         let isSpinning = false;
         let activeUnitIndex = -1; 
 
+        // --- AUTH / PROFILE LOGIC ---
+        window.handleEnter = (e) => { if (e.key === "Enter") loadProfile(); };
+
+        window.loadProfile = async () => {
+            const input = document.getElementById("username-input").value.trim();
+            if (!input) return alert("Please enter a username.");
+            
+            // Sanitize username for database document ID (no spaces/special chars)
+            currentUser = input.toLowerCase().replace(/[^a-z0-9]/g, ""); 
+            
+            if (!currentUser) return alert("Username must contain letters or numbers.");
+
+            // Show loading
+            document.getElementById("loading-overlay").style.display = "flex";
+            document.getElementById("sync-error").innerText = "";
+
+            try {
+                const docRef = doc(db, "profiles", currentUser);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    studyCoins = data.studyCoins || 0;
+                    totalHoursStudied = data.totalHoursStudied || 0;
+                    rewards = data.rewards || [];
+                    units = data.units || [];
+                } else {
+                    // New user profile
+                    studyCoins = 0;
+                    totalHoursStudied = 0;
+                    rewards = [];
+                    units = [];
+                    await saveData();
+                }
+
+                // Update UI
+                document.getElementById("username-display").innerText = input;
+                document.getElementById("profile-screen").style.display = "none";
+                document.getElementById("app-screen").style.display = "flex";
+                
+                activeUnitIndex = -1;
+                updateUI();
+            } catch (error) {
+                document.getElementById("sync-error").innerText = "Error connecting to database. Check your config.";
+                console.error(error);
+            } finally {
+                document.getElementById("loading-overlay").style.display = "none";
+            }
+        };
+
+        window.logoutProfile = () => {
+            if (isStudying) {
+                if (!confirm("Timer is running. Are you sure you want to switch users?")) return;
+                clearInterval(timerInterval);
+            }
+            currentUser = "";
+            document.getElementById("username-input").value = "";
+            document.getElementById("app-screen").style.display = "none";
+            document.getElementById("profile-screen").style.display = "flex";
+        };
+
+        // --- DATABASE SYNC ---
+        async function saveData() {
+            if (!currentUser) return;
+            try {
+                await setDoc(doc(db, "profiles", currentUser), {
+                    studyCoins: studyCoins,
+                    totalHoursStudied: totalHoursStudied,
+                    rewards: rewards,
+                    units: units
+                });
+            } catch (e) {
+                console.error("Error saving data:", e);
+            }
+        }
+
         // --- TIMER LOGIC ---
-        function toggleTimer() {
+        window.toggleTimer = () => {
             const btn = document.getElementById("start-timer-btn");
             if (!isStudying) {
                 isStudying = true;
                 btn.innerText = "Pause";
                 btn.style.backgroundColor = "#e67e22";
-                // Lock the dropdown while studying so they can't switch mid-session
                 document.getElementById("subject-dropdown").disabled = true;
                 
                 timerInterval = setInterval(() => {
@@ -309,9 +361,9 @@
                 btn.style.backgroundColor = "#2ecc71";
                 clearInterval(timerInterval);
             }
-        }
+        };
 
-        function stopAndClaimTimer() {
+        window.stopAndClaimTimer = () => {
             if (secondsElapsed === 0) return;
             clearInterval(timerInterval);
             isStudying = false;
@@ -321,11 +373,9 @@
 
             const hoursEarned = secondsElapsed / 3600;
             
-            // Add to global coins and total hours
             studyCoins += hoursEarned;
             totalHoursStudied += hoursEarned;
 
-            // Add to specific subject if one is selected
             if (activeUnitIndex !== -1 && units[activeUnitIndex]) {
                 units[activeUnitIndex].hours += hoursEarned;
             }
@@ -334,7 +384,7 @@
             updateTimerDisplay();
             saveData();
             updateUI();
-        }
+        };
 
         function updateTimerDisplay() {
             const hrs = Math.floor(secondsElapsed / 3600).toString().padStart(2, '0');
@@ -343,13 +393,13 @@
             document.getElementById("timer-display").innerText = `${hrs}:${mins}:${secs}`;
         }
 
-        function changeSubject() {
+        window.changeSubject = () => {
             const dropdown = document.getElementById("subject-dropdown");
             activeUnitIndex = parseInt(dropdown.value);
-        }
+        };
 
         // --- MODAL LOGIC ---
-        function openSubjectModal() {
+        window.openSubjectModal = () => {
             if (isStudying) {
                 alert("Please pause or finish the timer before adding a subject.");
                 return;
@@ -357,27 +407,26 @@
             document.getElementById("new-subject-input").value = "";
             document.getElementById("subject-modal").style.display = "flex";
             document.getElementById("new-subject-input").focus();
-        }
+        };
 
-        function closeSubjectModal() {
+        window.closeSubjectModal = () => {
             document.getElementById("subject-modal").style.display = "none";
-        }
+        };
 
-        function confirmAddSubject() {
+        window.confirmAddSubject = () => {
             const text = document.getElementById("new-subject-input").value.trim();
             if (text !== "") {
                 units.push({ name: text, hours: 0 });
                 closeSubjectModal();
                 saveData();
                 updateUI();
-                // Auto-select the newly added subject
                 document.getElementById("subject-dropdown").value = units.length - 1;
                 activeUnitIndex = units.length - 1;
             }
-        }
+        };
 
         // --- SUBJECT LIST ---
-        function deleteUnit(index, event) {
+        window.deleteUnit = (index, event) => {
             event.stopPropagation();
             if (activeUnitIndex === index) {
                 if (isStudying) stopAndClaimTimer(); 
@@ -389,10 +438,10 @@
             units.splice(index, 1);
             saveData();
             updateUI();
-        }
+        };
 
         // --- REWARDS ---
-        function addReward() {
+        window.addReward = () => {
             const input = document.getElementById("reward-input");
             const text = input.value.trim();
             if (text !== "") {
@@ -401,20 +450,20 @@
                 saveData();
                 updateUI();
             }
-        }
+        };
 
-        function deleteReward(index) {
+        window.deleteReward = (index) => {
             rewards.splice(index, 1);
             saveData();
             updateUI();
-        }
+        };
 
-        function claimOverrideCoin() {
+        window.claimOverrideCoin = () => {
             studyCoins += 1;
             saveData();
             updateUI();
             document.getElementById("result").innerText = "✅ Override used: +1 coin";
-        }
+        };
 
         // --- UI UPDATE ---
         function updateUI() {
@@ -423,7 +472,7 @@
 
             // Update Dropdown
             const dropdown = document.getElementById("subject-dropdown");
-            dropdown.innerHTML = '<option value="-1">General Study </option>';
+            dropdown.innerHTML = '<option value="-1">General Study (No Subject)</option>';
             units.forEach((unit, index) => {
                 const option = document.createElement("option");
                 option.value = index;
@@ -476,7 +525,7 @@
             });
         }
 
-        function spinWheel() {
+        window.spinWheel = () => {
             if (isSpinning) return;
             if (studyCoins < 1) {
                 alert("Not enough coins! Study more to earn coins.");
@@ -515,32 +564,26 @@
                 }
             }
             animateSpin();
-        }
+        };
 
-        // --- SAVE & RESET ---
-        function saveData() {
-            localStorage.setItem('studyCoins', studyCoins);
-            localStorage.setItem('totalHoursStudied', totalHoursStudied);
-            localStorage.setItem('studyRewards', JSON.stringify(rewards));
-            localStorage.setItem('studyUnits', JSON.stringify(units));
-        }
-
-        function resetCoinsOnly() {
+        // --- RESET ---
+        window.resetCoinsOnly = () => {
             studyCoins = 0;
             saveData();
             updateUI();
             document.getElementById("result").innerText = "Coins reset to 0!";
-        }
+        };
 
-        function resetData() {
-            if (confirm("Are you sure you want to reset all data and coins?")) {
-                localStorage.clear();
-                location.reload();
+        window.resetData = () => {
+            if (confirm("Are you sure you want to reset all data and coins for this user?")) {
+                studyCoins = 0;
+                totalHoursStudied = 0;
+                rewards = [];
+                units = [];
+                saveData();
+                updateUI();
             }
-        }
-
-        // Initialize
-        updateUI();
+        };
 
         // PWA Service Worker
         if ('serviceWorker' in navigator) {
