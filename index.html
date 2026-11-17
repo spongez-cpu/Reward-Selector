@@ -264,7 +264,7 @@
     <div class="modal" id="subject-modal">
         <div class="modal-content">
             <h2 style="margin-top: 0; color: #333;">Add Subject</h2>
-            <input type="text" id="new-subject-input" placeholder="e.g. ECE2072" style="width: 100%; box-sizing: border-box; margin-bottom: 15px;">
+            <input type="text" id="new-subject-input" placeholder="e.g. ECE2072, FIT3155, MTH3170" style="width: 100%; box-sizing: border-box; margin-bottom: 15px;">
             <div style="display: flex; gap: 10px;">
                 <button onclick="closeSubjectModal()" style="background-color: #95a5a6; flex: 1;">Cancel</button>
                 <button onclick="confirmAddSubject()" style="flex: 1;">Add</button>
@@ -423,7 +423,7 @@
 
             // Update Dropdown
             const dropdown = document.getElementById("subject-dropdown");
-            dropdown.innerHTML = '<option value="-1">General Study (No Subject)</option>';
+            dropdown.innerHTML = '<option value="-1">General Study </option>';
             units.forEach((unit, index) => {
                 const option = document.createElement("option");
                 option.value = index;
