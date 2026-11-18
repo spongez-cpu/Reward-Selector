@@ -105,7 +105,6 @@
         .edit-btn { background-color: #3498db; padding: 5px 10px; font-size: 12px; }
         .edit-btn:hover { background-color: #2980b9; }
         
-        /* NEW: Link Button */
         .link-btn { 
             background-color: #9b59b6; padding: 5px 10px; font-size: 12px; 
             text-decoration: none; color: white; border-radius: 6px; font-weight: bold;
@@ -248,7 +247,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // PASTE YOUR FIREBASE CONFIG HERE
         // Your web app's Firebase configuration
         // For Firebase JS SDK v7.20.0 and later, measurementId is optional
         const firebaseConfig = {
@@ -268,8 +266,6 @@
         let currentUser = "";
         let studyCoins = 0;
         let totalHoursStudied = 0;
-        
-        // Rewards now hold an object: { text: "Reward", link: "https://..." }
         let rewards = []; 
         let units = [];
         
@@ -305,7 +301,7 @@
                     studyCoins = data.studyCoins || 0;
                     totalHoursStudied = data.totalHoursStudied || 0;
                     
-                    // Migration: Handle old string rewards vs new object rewards
+                    // FIX: Migrate old string rewards to new object format
                     let rawRewards = data.rewards || [];
                     rewards = rawRewards.map(r => {
                         if (typeof r === 'string') return { text: r, link: "" };
@@ -478,7 +474,6 @@
             let link = linkInput.value.trim();
             
             if (text !== "") {
-                // Ensure link has http/https, otherwise it won't work properly
                 if (link !== "" && !link.startsWith("http://") && !link.startsWith("https://")) {
                     link = "https://" + link;
                 }
@@ -502,10 +497,10 @@
             const currentLink = rewards[index].link || "";
             
             const newText = prompt("Edit reward name:", currentText);
-            if (newText === null) return; // User cancelled
+            if (newText === null) return; 
             
             const newLink = prompt("Edit link (leave blank for none):", currentLink);
-            if (newLink === null) return; // User cancelled
+            if (newLink === null) return; 
             
             let finalLink = newLink.trim();
             if (finalLink !== "" && !finalLink.startsWith("http://") && !finalLink.startsWith("https://")) {
@@ -588,7 +583,6 @@
             rewards.forEach((reward, index) => {
                 const li = document.createElement("li");
                 
-                // Create the Link button if a link exists
                 let linkBtnHTML = "";
                 if (reward.link) {
                     linkBtnHTML = `<a href="${reward.link}" target="_blank" class="link-btn">🔗 Open</a>`;
@@ -619,7 +613,7 @@
             rewards.forEach((reward, index) => {
                 const div = document.createElement("div");
                 div.className = "spinner-item" + (index === activeIndex ? " active" : "");
-                div.innerText = reward.text;
+                div.innerText = reward.text; // <-- Fixed here to show only text
                 spinnerBox.appendChild(div);
             });
         }
@@ -659,7 +653,6 @@
                 } else {
                     updateSpinnerUI(winningIndex);
                     
-                    // Check if winner has a link and display it
                     const winner = rewards[winningIndex];
                     if (winner.link) {
                         document.getElementById("result").innerHTML = `🎉 Reward Won: ${winner.text}! <br><br><a href="${winner.link}" target="_blank" class="link-btn" style="font-size:16px; padding:10px 20px;">🔗 Claim Your Reward</a>`;
@@ -694,7 +687,7 @@
             }
         };
 
-        
+        // NO SERVICE WORKER REGISTRATION HERE
     </script>
 </body>
 </html>
