@@ -99,6 +99,10 @@
         .delete-btn { background-color: #e74c3c; padding: 5px 10px; font-size: 12px; }
         .delete-btn:hover { background-color: #c0392b; }
 
+        /* NEW: Edit Button */
+        .edit-btn { background-color: #3498db; padding: 5px 10px; font-size: 12px; margin-right: 5px; }
+        .edit-btn:hover { background-color: #2980b9; }
+
         /* Spinner */
         .spinner-box { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; padding: 12px; background: #fafafa; border-radius: 8px; border: 3px solid #3498db; }
         .spinner-item { background: white; border: 2px solid #ddd; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; color: #333; text-align: center; transition: all 0.1s ease; }
@@ -180,7 +184,7 @@
 
             <ul id="subject-list" style="margin-top: 25px; font-size: 14px;"></ul>
 
-            <!-- NEW: DAILY HISTORY -->
+            <!-- DAILY HISTORY -->
             <div class="daily-box">
                 <h3>Daily Study Record</h3>
                 <div class="today-total">Today's Total: <span id="today-hours">0.00</span>h</div>
@@ -229,6 +233,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+        // PASTE YOUR FIREBASE CONFIG HERE
         // Your web app's Firebase configuration
         // For Firebase JS SDK v7.20.0 and later, measurementId is optional
         const firebaseConfig = {
@@ -251,9 +256,8 @@
         let rewards = [];
         let units = [];
         
-        // NEW: Daily History State
-        let dailyHistory = {}; // Format: { "2023-10-24": 2.5, "2023-10-25": 1.2 }
-        let todayDate = new Date().toLocaleDateString('en-CA'); // Format: YYYY-MM-DD
+        let dailyHistory = {}; 
+        let todayDate = new Date().toLocaleDateString('en-CA'); 
         let todayHours = 0;
 
         let secondsElapsed = 0;
@@ -291,7 +295,6 @@
                     await saveData();
                 }
 
-                // Initialize Today's Hours
                 todayHours = dailyHistory[todayDate] || 0;
 
                 document.getElementById("username-display").innerText = input;
@@ -366,21 +369,17 @@
 
             const hoursEarned = secondsElapsed / 3600;
             
-            // Add to global stats
             studyCoins += hoursEarned;
             totalHoursStudied += hoursEarned;
             
-            // Add to specific subject
             if (activeUnitIndex !== -1 && units[activeUnitIndex]) {
                 units[activeUnitIndex].hours += hoursEarned;
             }
 
-            // NEW: Add to Daily History
-            // Check if the date changed while the timer was running (e.g., midnight strike)
             const currentDateCheck = new Date().toLocaleDateString('en-CA');
             if (currentDateCheck !== todayDate) {
-                todayDate = currentDateCheck; // Reset date
-                todayHours = 0; // Reset today's counter
+                todayDate = currentDateCheck;
+                todayHours = 0;
             }
             
             todayHours += hoursEarned;
@@ -464,6 +463,18 @@
             updateUI();
         };
 
+        // NEW: Edit Reward Logic
+        window.editReward = (index) => {
+            const currentName = rewards[index];
+            const newName = prompt("Edit reward name:", currentName);
+            
+            if (newName !== null && newName.trim() !== "") {
+                rewards[index] = newName.trim();
+                saveData();
+                updateUI();
+            }
+        };
+
         window.claimOverrideCoin = () => {
             studyCoins += 1;
             saveData();
@@ -482,15 +493,13 @@
             const historyList = document.getElementById("history-list");
             historyList.innerHTML = "";
             
-            // Sort history by date descending (newest first)
             const sortedDates = Object.keys(dailyHistory).sort((a, b) => new Date(b) - new Date(a));
             
             sortedDates.forEach(dateStr => {
-                if (dateStr === todayDate) return; // Skip today, we show it at the top
-                if (dailyHistory[dateStr] === 0) return; // Skip days with 0 hours
+                if (dateStr === todayDate) return;
+                if (dailyHistory[dateStr] === 0) return;
                 
                 const li = document.createElement("li");
-                // Format date nicely (e.g. "Oct 24, 2023")
                 const dateObj = new Date(dateStr + 'T00:00:00');
                 const formattedDate = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
                 
@@ -534,7 +543,13 @@
             list.innerHTML = "";
             rewards.forEach((reward, index) => {
                 const li = document.createElement("li");
-                li.innerHTML = `${reward} <button class="delete-btn" onclick="deleteReward(${index})">Delete</button>`;
+                li.innerHTML = `
+                    <span>${reward}</span>
+                    <div>
+                        <button class="edit-btn" onclick="editReward(${index})">Edit</button>
+                        <button class="delete-btn" onclick="deleteReward(${index})">Delete</button>
+                    </div>
+                `;
                 list.appendChild(li);
             });
 
