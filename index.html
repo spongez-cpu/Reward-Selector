@@ -38,7 +38,8 @@
 
         h1 { color: #333; margin-top: 0; font-size: 1.5rem; }
 
-        .input-area { display: flex; gap: 10px; margin-bottom: 20px; }
+        .input-area { display: flex; gap: 10px; margin-bottom: 20px; flex-direction: column; }
+        .input-row { display: flex; gap: 10px; }
 
         input {
             flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 16px;
@@ -95,13 +96,23 @@
         li {
             background: #f9f9f9; padding: 12px; margin-bottom: 8px; border-radius: 6px;
             display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #3498db;
+            flex-wrap: wrap;
         }
+        .reward-text { flex: 1; min-width: 150px; }
+        .reward-actions { display: flex; gap: 5px; margin-top: 5px; }
+        
         .delete-btn { background-color: #e74c3c; padding: 5px 10px; font-size: 12px; }
         .delete-btn:hover { background-color: #c0392b; }
-
-        /* NEW: Edit Button */
-        .edit-btn { background-color: #3498db; padding: 5px 10px; font-size: 12px; margin-right: 5px; }
+        .edit-btn { background-color: #3498db; padding: 5px 10px; font-size: 12px; }
         .edit-btn:hover { background-color: #2980b9; }
+        
+        /* NEW: Link Button */
+        .link-btn { 
+            background-color: #9b59b6; padding: 5px 10px; font-size: 12px; 
+            text-decoration: none; color: white; border-radius: 6px; font-weight: bold;
+            display: inline-block;
+        }
+        .link-btn:hover { background-color: #8e44ad; opacity: 0.9; }
 
         /* Spinner */
         .spinner-box { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; padding: 12px; background: #fafafa; border-radius: 8px; border: 3px solid #3498db; }
@@ -196,8 +207,13 @@
         <div class="container">
             <h1>Reward Menu 🎁</h1>
             <div class="input-area">
-                <input type="text" id="reward-input" placeholder="Add reward (e.g., 15m YouTube)">
-                <button onclick="addReward()" style="background-color: #3498db;">Add</button>
+                <div class="input-row">
+                    <input type="text" id="reward-input" placeholder="Add reward (e.g., 15m YouTube)">
+                </div>
+                <div class="input-row">
+                    <input type="url" id="reward-link-input" placeholder="Optional link (e.g., https://youtube.com...)">
+                    <button onclick="addReward()" style="background-color: #3498db; white-space: nowrap;">Add</button>
+                </div>
             </div>
             <ul id="reward-list"></ul>
         </div>
@@ -253,7 +269,9 @@
         let currentUser = "";
         let studyCoins = 0;
         let totalHoursStudied = 0;
-        let rewards = [];
+        
+        // Rewards now hold an object: { text: "Reward", link: "https://..." }
+        let rewards = []; 
         let units = [];
         
         let dailyHistory = {}; 
@@ -287,7 +305,14 @@
                     const data = docSnap.data();
                     studyCoins = data.studyCoins || 0;
                     totalHoursStudied = data.totalHoursStudied || 0;
-                    rewards = data.rewards || [];
+                    
+                    // Migration: Handle old string rewards vs new object rewards
+                    let rawRewards = data.rewards || [];
+                    rewards = rawRewards.map(r => {
+                        if (typeof r === 'string') return { text: r, link: "" };
+                        return r;
+                    });
+
                     units = data.units || [];
                     dailyHistory = data.dailyHistory || {};
                 } else {
@@ -447,11 +472,21 @@
 
         // --- REWARDS ---
         window.addReward = () => {
-            const input = document.getElementById("reward-input");
-            const text = input.value.trim();
+            const textInput = document.getElementById("reward-input");
+            const linkInput = document.getElementById("reward-link-input");
+            
+            const text = textInput.value.trim();
+            let link = linkInput.value.trim();
+            
             if (text !== "") {
-                rewards.push(text);
-                input.value = "";
+                // Ensure link has http/https, otherwise it won't work properly
+                if (link !== "" && !link.startsWith("http://") && !link.startsWith("https://")) {
+                    link = "https://" + link;
+                }
+                
+                rewards.push({ text: text, link: link });
+                textInput.value = "";
+                linkInput.value = "";
                 saveData();
                 updateUI();
             }
@@ -463,13 +498,23 @@
             updateUI();
         };
 
-        // NEW: Edit Reward Logic
         window.editReward = (index) => {
-            const currentName = rewards[index];
-            const newName = prompt("Edit reward name:", currentName);
+            const currentText = rewards[index].text;
+            const currentLink = rewards[index].link || "";
             
-            if (newName !== null && newName.trim() !== "") {
-                rewards[index] = newName.trim();
+            const newText = prompt("Edit reward name:", currentText);
+            if (newText === null) return; // User cancelled
+            
+            const newLink = prompt("Edit link (leave blank for none):", currentLink);
+            if (newLink === null) return; // User cancelled
+            
+            let finalLink = newLink.trim();
+            if (finalLink !== "" && !finalLink.startsWith("http://") && !finalLink.startsWith("https://")) {
+                finalLink = "https://" + finalLink;
+            }
+
+            if (newText.trim() !== "") {
+                rewards[index] = { text: newText.trim(), link: finalLink };
                 saveData();
                 updateUI();
             }
@@ -543,9 +588,17 @@
             list.innerHTML = "";
             rewards.forEach((reward, index) => {
                 const li = document.createElement("li");
+                
+                // Create the Link button if a link exists
+                let linkBtnHTML = "";
+                if (reward.link) {
+                    linkBtnHTML = `<a href="${reward.link}" target="_blank" class="link-btn">🔗 Open</a>`;
+                }
+
                 li.innerHTML = `
-                    <span>${reward}</span>
-                    <div>
+                    <span class="reward-text">${reward.text}</span>
+                    <div class="reward-actions">
+                        ${linkBtnHTML}
                         <button class="edit-btn" onclick="editReward(${index})">Edit</button>
                         <button class="delete-btn" onclick="deleteReward(${index})">Delete</button>
                     </div>
@@ -567,7 +620,7 @@
             rewards.forEach((reward, index) => {
                 const div = document.createElement("div");
                 div.className = "spinner-item" + (index === activeIndex ? " active" : "");
-                div.innerText = reward;
+                div.innerText = reward.text;
                 spinnerBox.appendChild(div);
             });
         }
@@ -606,7 +659,15 @@
                     setTimeout(animateSpin, speed);
                 } else {
                     updateSpinnerUI(winningIndex);
-                    document.getElementById("result").innerText = `🎉 Reward Won: ${rewards[winningIndex]}!`;
+                    
+                    // Check if winner has a link and display it
+                    const winner = rewards[winningIndex];
+                    if (winner.link) {
+                        document.getElementById("result").innerHTML = `🎉 Reward Won: ${winner.text}! <br><br><a href="${winner.link}" target="_blank" class="link-btn" style="font-size:16px; padding:10px 20px;">🔗 Claim Your Reward</a>`;
+                    } else {
+                        document.getElementById("result").innerText = `🎉 Reward Won: ${winner.text}!`;
+                    }
+                    
                     isSpinning = false;
                 }
             }
