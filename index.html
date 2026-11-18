@@ -40,8 +40,12 @@
         .input-area { display: flex; gap: 10px; margin-bottom: 20px; flex-direction: column; }
         .input-row { display: flex; gap: 10px; }
 
-        input {
+        input[type="text"], input[type="url"] {
             flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 16px;
+        }
+
+        input[type="color"] {
+            padding: 0; border: 2px solid #ddd; border-radius: 6px; cursor: pointer; width: 44px; height: 44px; background: white;
         }
 
         button {
@@ -98,7 +102,7 @@
             flex-wrap: wrap;
         }
         .reward-text { flex: 1; min-width: 150px; }
-        .reward-actions { display: flex; gap: 5px; margin-top: 5px; }
+        .reward-actions { display: flex; gap: 5px; margin-top: 5px; align-items: center; }
         
         .delete-btn { background-color: #e74c3c; padding: 5px 10px; font-size: 12px; }
         .delete-btn:hover { background-color: #c0392b; }
@@ -127,7 +131,7 @@
         .reset-data-btn { background-color: #95a5a6; }
         .reset-data-btn:hover { background-color: #7f8c8d; }
 
-        .subject-hours { color: #e67e22; font-size: 13px; font-weight: bold; }
+        .subject-hours { font-size: 13px; font-weight: bold; }
 
         /* Daily History Styles */
         .daily-box {
@@ -230,14 +234,20 @@
         </div>
     </div>
 
-    <!-- ADD SUBJECT MODAL -->
+    <!-- ADD/EDIT SUBJECT MODAL -->
     <div class="modal" id="subject-modal">
         <div class="modal-content">
-            <h2 style="margin-top: 0; color: #333;">Add Subject</h2>
-            <input type="text" id="new-subject-input" placeholder="e.g. ECE2072, FIT3155, MTH3170" style="width: 100%; box-sizing: border-box; margin-bottom: 15px;">
+            <h2 id="subject-modal-title" style="margin-top: 0; color: #333;">Add Subject</h2>
+            <input type="text" id="new-subject-input" placeholder="e.g. ECE2072" style="width: 100%; box-sizing: border-box; margin-bottom: 15px;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 10px; background: #f9f9f9; border-radius: 8px;">
+                <span style="font-weight: bold; color: #333;">Subject Color:</span>
+                <input type="color" id="new-subject-color" value="#e67e22">
+            </div>
+
             <div style="display: flex; gap: 10px;">
                 <button onclick="closeSubjectModal()" style="background-color: #95a5a6; flex: 1;">Cancel</button>
-                <button onclick="confirmAddSubject()" style="flex: 1;">Add</button>
+                <button id="subject-modal-save-btn" onclick="saveSubject()" style="flex: 1;">Add</button>
             </div>
         </div>
     </div>
@@ -267,7 +277,7 @@
         let studyCoins = 0;
         let totalHoursStudied = 0;
         let rewards = []; 
-        let units = [];
+        let units = []; // Now holds { name, hours, color }
         
         let dailyHistory = {}; 
         let todayDate = new Date().toLocaleDateString('en-CA'); 
@@ -278,6 +288,9 @@
         let isStudying = false;
         let isSpinning = false;
         let activeUnitIndex = -1; 
+
+        // Track if we are editing an existing subject
+        let editingSubjectIndex = -1; 
 
         // --- AUTH / PROFILE LOGIC ---
         window.handleEnter = (e) => { if (e.key === "Enter") loadProfile(); };
@@ -301,14 +314,20 @@
                     studyCoins = data.studyCoins || 0;
                     totalHoursStudied = data.totalHoursStudied || 0;
                     
-                    // FIX: Migrate old string rewards to new object format
+                    // FIX: Migrate old string rewards
                     let rawRewards = data.rewards || [];
                     rewards = rawRewards.map(r => {
                         if (typeof r === 'string') return { text: r, link: "" };
                         return r;
                     });
 
-                    units = data.units || [];
+                    // FIX: Migrate old units that might not have a color
+                    let rawUnits = data.units || [];
+                    units = rawUnits.map(u => {
+                        if (!u.color) return { ...u, color: "#e67e22" }; // Default to orange
+                        return u;
+                    });
+
                     dailyHistory = data.dailyHistory || {};
                 } else {
                     studyCoins = 0; totalHoursStudied = 0; rewards = []; units = []; dailyHistory = {};
@@ -423,13 +442,26 @@
             activeUnitIndex = parseInt(dropdown.value);
         };
 
-        // --- MODAL LOGIC ---
-        window.openSubjectModal = () => {
+        // --- SUBJECT MODAL LOGIC ---
+        window.openSubjectModal = (editIndex = -1) => {
             if (isStudying) {
-                alert("Please pause or finish the timer before adding a subject.");
+                alert("Please pause or finish the timer before modifying subjects.");
                 return;
             }
-            document.getElementById("new-subject-input").value = "";
+            editingSubjectIndex = editIndex;
+
+            if (editIndex === -1) {
+                document.getElementById("subject-modal-title").innerText = "Add Subject";
+                document.getElementById("subject-modal-save-btn").innerText = "Add";
+                document.getElementById("new-subject-input").value = "";
+                document.getElementById("new-subject-color").value = "#e67e22"; // Default orange
+            } else {
+                document.getElementById("subject-modal-title").innerText = "Edit Subject";
+                document.getElementById("subject-modal-save-btn").innerText = "Save";
+                document.getElementById("new-subject-input").value = units[editIndex].name;
+                document.getElementById("new-subject-color").value = units[editIndex].color;
+            }
+
             document.getElementById("subject-modal").style.display = "flex";
             document.getElementById("new-subject-input").focus();
         };
@@ -438,15 +470,25 @@
             document.getElementById("subject-modal").style.display = "none";
         };
 
-        window.confirmAddSubject = () => {
+        window.saveSubject = () => {
             const text = document.getElementById("new-subject-input").value.trim();
+            const color = document.getElementById("new-subject-color").value;
+
             if (text !== "") {
-                units.push({ name: text, hours: 0 });
+                if (editingSubjectIndex === -1) {
+                    // Add new
+                    units.push({ name: text, hours: 0, color: color });
+                    activeUnitIndex = units.length - 1;
+                } else {
+                    // Edit existing
+                    units[editingSubjectIndex].name = text;
+                    units[editingSubjectIndex].color = color;
+                    activeUnitIndex = editingSubjectIndex;
+                }
+                
                 closeSubjectModal();
                 saveData();
                 updateUI();
-                document.getElementById("subject-dropdown").value = units.length - 1;
-                activeUnitIndex = units.length - 1;
             }
         };
 
@@ -456,7 +498,6 @@
             if (activeUnitIndex === index) {
                 if (isStudying) stopAndClaimTimer(); 
                 activeUnitIndex = -1;
-                document.getElementById("subject-dropdown").value = "-1";
             } else if (activeUnitIndex > index) {
                 activeUnitIndex--;
             }
@@ -561,17 +602,18 @@
                 dropdown.appendChild(option);
             });
 
-            // Update Subject List
+            // Update Subject List (with Colors!)
             const subjectList = document.getElementById("subject-list");
             subjectList.innerHTML = "";
             units.forEach((unit, index) => {
                 const li = document.createElement("li");
-                li.style.borderLeftColor = "#e67e22";
+                li.style.borderLeftColor = unit.color; // Use the selected color
                 li.innerHTML = `
                     <span>${unit.name}</span>
-                    <span>
-                        <span class="subject-hours">${unit.hours.toFixed(2)}h</span>
-                        <button class="delete-btn" onclick="deleteUnit(${index}, event)" style="margin-left: 10px;">X</button>
+                    <span class="reward-actions">
+                        <span class="subject-hours" style="color: ${unit.color};">${unit.hours.toFixed(2)}h</span>
+                        <button class="edit-btn" onclick="openSubjectModal(${index})" style="margin-left: 10px;">Edit</button>
+                        <button class="delete-btn" onclick="deleteUnit(${index}, event)">X</button>
                     </span>
                 `;
                 subjectList.appendChild(li);
@@ -613,7 +655,7 @@
             rewards.forEach((reward, index) => {
                 const div = document.createElement("div");
                 div.className = "spinner-item" + (index === activeIndex ? " active" : "");
-                div.innerText = reward.text; // <-- Fixed here to show only text
+                div.innerText = reward.text; 
                 spinnerBox.appendChild(div);
             });
         }
@@ -686,8 +728,6 @@
                 updateUI();
             }
         };
-
-        // NO SERVICE WORKER REGISTRATION HERE
     </script>
 </body>
 </html>
