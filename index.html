@@ -795,4 +795,44 @@
 
                 if (step < totalSteps) {
                     if (step > totalSteps - 12) speed += 35;
-                    setTimeout
+                    setTimeout(animateSpin, speed);
+                } else {
+                    updateSpinnerUI(winningIndex);
+                    
+                    const winner = rewards[winningIndex];
+                    if (winner.link) {
+                        document.getElementById("result").innerHTML = `🎉 Reward Won: ${winner.text}! <br><br><a href="${winner.link}" target="_blank" class="link-btn" style="font-size:16px; padding:10px 20px;">🔗 Claim Your Reward</a>`;
+                    } else {
+                        document.getElementById("result").innerText = `🎉 Reward Won: ${winner.text}!`;
+                    }
+                    
+                    isSpinning = false;
+                }
+            }
+            animateSpin();
+        };
+
+        // --- RESET ---
+        window.resetCoinsOnly = () => {
+            studyCoins = 0;
+            saveData();
+            updateUI();
+            document.getElementById("result").innerText = "Coins reset to 0!";
+        };
+
+        window.resetData = () => {
+            if (confirm("Are you sure you want to reset all data and coins for this user?")) {
+                studyCoins = 0;
+                totalHoursStudied = 0;
+                rewards = [];
+                units = [];
+                dailyHistory = {};
+                todayHours = 0;
+                saveData();
+                updateUI();
+            }
+        };
+    </script>
+</body>
+
+</html>
