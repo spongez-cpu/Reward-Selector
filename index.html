@@ -299,6 +299,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // LocalStorage key for persisted session
+        const SESSION_KEY = "studyRewards.currentUser";
+
         // --- STATE ---
         let currentUser = "";
         let displayUsername = "";
@@ -331,12 +334,16 @@
         // --- AUTH / PROFILE LOGIC ---
         window.handleEnter = (e) => { if (e.key === "Enter") loadProfile(); };
 
-        window.loadProfile = async () => {
-            const input = document.getElementById("username-input").value.trim();
-            if (!input) return alert("Please enter a username.");
-            
+        // Core session restore / login routine shared by login button and auto-restore
+        async function restoreOrLoadProfile(rawInput) {
+            if (!rawInput || !rawInput.trim()) return false;
+
+            const input = rawInput.trim();
             currentUser = input.toLowerCase().replace(/[^a-z0-9]/g, ""); 
-            if (!currentUser) return alert("Username must contain letters or numbers.");
+            if (!currentUser) {
+                document.getElementById("sync-error").innerText = "Username must contain letters or numbers.";
+                return false;
+            }
 
             document.getElementById("loading-overlay").style.display = "flex";
             document.getElementById("sync-error").innerText = "";
@@ -373,18 +380,29 @@
                 todayHours = dailyHistory[todayDate] || 0;
                 displayUsername = input;
 
+                // Persist session so it survives reloads
+                localStorage.setItem(SESSION_KEY, displayUsername);
+
                 document.getElementById("username-display").innerText = displayUsername;
                 document.getElementById("profile-screen").style.display = "none";
                 document.getElementById("app-screen").style.display = "flex";
                 
                 activeUnitIndex = -1;
                 updateUI();
+                return true;
             } catch (error) {
                 document.getElementById("sync-error").innerText = "Error connecting to database. Check your config.";
                 console.error(error);
+                return false;
             } finally {
                 document.getElementById("loading-overlay").style.display = "none";
             }
+        }
+
+        window.loadProfile = async () => {
+            const input = document.getElementById("username-input").value.trim();
+            if (!input) return alert("Please enter a username.");
+            await restoreOrLoadProfile(input);
         };
 
         window.logoutProfile = () => {
@@ -392,12 +410,26 @@
                 if (!confirm("Timer is running. Are you sure you want to switch users?")) return;
                 clearInterval(timerInterval);
             }
+            // Clear saved session so refresh shows the profile screen
+            localStorage.removeItem(SESSION_KEY);
             currentUser = "";
             displayUsername = "";
             document.getElementById("username-input").value = "";
             document.getElementById("app-screen").style.display = "none";
             document.getElementById("profile-screen").style.display = "flex";
         };
+
+        // --- AUTO-RESTORE SESSION ON PAGE LOAD ---
+        window.addEventListener("DOMContentLoaded", async () => {
+            const savedUser = localStorage.getItem(SESSION_KEY);
+            if (savedUser) {
+                // Show loading state while we restore
+                document.getElementById("loading-overlay").style.display = "flex";
+                document.getElementById("loading-overlay").innerText = "Restoring session... 🔄";
+                await restoreOrLoadProfile(savedUser);
+                document.getElementById("loading-overlay").innerText = "Syncing with Cloud... ☁️";
+            }
+        });
 
         // --- USERNAME EDIT LOGIC ---
         window.openUsernameModal = () => {
@@ -462,6 +494,9 @@
                 // Update local state
                 currentUser = newUserKey;
                 displayUsername = input;
+
+                // Update saved session with new display name
+                localStorage.setItem(SESSION_KEY, displayUsername);
 
                 document.getElementById("username-display").innerText = displayUsername;
                 closeUsernameModal();
