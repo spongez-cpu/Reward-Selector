@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Study Rewards">
-    <link rel="apple-touch-icon" href="IMG_2097.png">
+    <link rel="apple-touch-icon" href="IMG_2096.png">
 
     <style>
         body {
@@ -319,6 +319,14 @@
 
         // Track if we are editing an existing subject
         let editingSubjectIndex = -1; 
+
+        // --- HELPER: Sorted rewards (alphabetical, case-insensitive) ---
+        // Returns array of { reward, originalIndex } so edits/deletes still map correctly.
+        function getSortedRewards() {
+            return rewards
+                .map((reward, originalIndex) => ({ reward, originalIndex }))
+                .sort((a, b) => a.reward.text.localeCompare(b.reward.text, undefined, { sensitivity: 'base' }));
+        }
 
         // --- AUTH / PROFILE LOGIC ---
         window.handleEnter = (e) => { if (e.key === "Enter") loadProfile(); };
@@ -723,10 +731,10 @@
                 subjectList.appendChild(li);
             });
 
-            // Update Rewards List
+            // Update Rewards List (SORTED ALPHABETICALLY)
             const list = document.getElementById("reward-list");
             list.innerHTML = "";
-            rewards.forEach((reward, index) => {
+            getSortedRewards().forEach(({ reward, originalIndex }) => {
                 const li = document.createElement("li");
                 
                 let linkBtnHTML = "";
@@ -738,8 +746,8 @@
                     <span class="reward-text">${reward.text}</span>
                     <div class="reward-actions">
                         ${linkBtnHTML}
-                        <button class="edit-btn" onclick="editReward(${index})">Edit</button>
-                        <button class="delete-btn" onclick="deleteReward(${index})">Delete</button>
+                        <button class="edit-btn" onclick="editReward(${originalIndex})">Edit</button>
+                        <button class="delete-btn" onclick="deleteReward(${originalIndex})">Delete</button>
                     </div>
                 `;
                 list.appendChild(li);
@@ -749,16 +757,21 @@
         }
 
         // --- SPINNER ---
+        // Uses sorted order for display. `sortedOrder` maps visual index -> original index.
+        let sortedOrder = [];
+
         function updateSpinnerUI(activeIndex = -1) {
             const spinnerBox = document.getElementById("spinner-box");
             spinnerBox.innerHTML = "";
-            if (rewards.length === 0) {
+            sortedOrder = getSortedRewards(); // recompute sorted mapping
+
+            if (sortedOrder.length === 0) {
                 spinnerBox.innerHTML = "<p style='color: #888;'>No rewards added yet!</p>";
                 return;
             }
-            rewards.forEach((reward, index) => {
+            sortedOrder.forEach(({ reward }, visualIndex) => {
                 const div = document.createElement("div");
-                div.className = "spinner-item" + (index === activeIndex ? " active" : "");
+                div.className = "spinner-item" + (visualIndex === activeIndex ? " active" : "");
                 div.innerText = reward.text; 
                 spinnerBox.appendChild(div);
             });
@@ -782,24 +795,29 @@
             isSpinning = true;
             document.getElementById("result").innerText = "Selecting a reward...";
 
-            const winningIndex = Math.floor(Math.random() * rewards.length);
+            // Sorted list is used for the spin
+            const sorted = getSortedRewards();
+            const total = sorted.length;
+
+            // Pick winning position in the SORTED list
+            const winningVisualIndex = Math.floor(Math.random() * total);
             let currentIndex = 0;
-            let totalSteps = rewards.length * 3 + winningIndex;
+            let totalSteps = total * 3 + winningVisualIndex;
             let speed = 60;
             let step = 0;
 
             function animateSpin() {
                 updateSpinnerUI(currentIndex);
-                currentIndex = (currentIndex + 1) % rewards.length;
+                currentIndex = (currentIndex + 1) % total;
                 step++;
 
                 if (step < totalSteps) {
                     if (step > totalSteps - 12) speed += 35;
                     setTimeout(animateSpin, speed);
                 } else {
-                    updateSpinnerUI(winningIndex);
+                    updateSpinnerUI(winningVisualIndex);
                     
-                    const winner = rewards[winningIndex];
+                    const winner = sorted[winningVisualIndex].reward;
                     if (winner.link) {
                         document.getElementById("result").innerHTML = `🎉 Reward Won: ${winner.text}! <br><br><a href="${winner.link}" target="_blank" class="link-btn" style="font-size:16px; padding:10px 20px;">🔗 Claim Your Reward</a>`;
                     } else {
