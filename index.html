@@ -331,6 +331,25 @@
                 .sort((a, b) => a.reward.text.localeCompare(b.reward.text, undefined, { sensitivity: 'base' }));
         }
 
+        // --- SINGLE-USER LOCK HELPERS ---
+        // The lock doc lives at system/lock and stores { usernameKey, displayName }.
+        // First-ever login claims it. Subsequent logins must match it.
+        const LOCK_DOC_REF = doc(db, "system", "lock");
+
+        async function getLockedUser() {
+            const snap = await getDoc(LOCK_DOC_REF);
+            if (snap.exists()) return snap.data();
+            return null;
+        }
+
+        async function claimLock(userKey, displayName) {
+            await setDoc(LOCK_DOC_REF, { usernameKey: userKey, displayName: displayName });
+        }
+
+        async function updateLockDisplayName(userKey, newDisplayName) {
+            await setDoc(LOCK_DOC_REF, { usernameKey: userKey, displayName: newDisplayName });
+        }
+
         // --- AUTH / PROFILE LOGIC ---
         window.handleEnter = (e) => { if (e.key === "Enter") loadProfile(); };
 
@@ -349,6 +368,23 @@
             document.getElementById("sync-error").innerText = "";
 
             try {
+                // ---- SINGLE-USER CHECK ----
+                const lock = await getLockedUser();
+
+                if (lock) {
+                    // A user is already locked in. Only allow the matching username.
+                    if (lock.usernameKey !== currentUser) {
+                        document.getElementById("sync-error").innerText =
+                            `This app is locked to one user (${lock.displayName}). Only that username can log in.`;
+                        return false;
+                    }
+                } else {
+                    // No lock yet — first login claims it. Make sure the profile doesn't already exist under another key... it won't, since no lock exists.
+                    // But be safe: if a profile doc somehow exists (e.g., legacy data), claim the lock to it.
+                    await claimLock(currentUser, input);
+                }
+
+                // ---- LOAD PROFILE ----
                 const docRef = doc(db, "profiles", currentUser);
                 const docSnap = await getDoc(docRef);
 
@@ -373,6 +409,7 @@
 
                     dailyHistory = data.dailyHistory || {};
                 } else {
+                    // Lock exists but no profile doc — create a fresh empty profile for the locked user.
                     studyCoins = 0; totalHoursStudied = 0; rewards = []; units = []; dailyHistory = {};
                     await saveData();
                 }
@@ -423,11 +460,14 @@
         window.addEventListener("DOMContentLoaded", async () => {
             const savedUser = localStorage.getItem(SESSION_KEY);
             if (savedUser) {
-                // Show loading state while we restore
                 document.getElementById("loading-overlay").style.display = "flex";
                 document.getElementById("loading-overlay").innerText = "Restoring session... 🔄";
-                await restoreOrLoadProfile(savedUser);
+                const ok = await restoreOrLoadProfile(savedUser);
                 document.getElementById("loading-overlay").innerText = "Syncing with Cloud... ☁️";
+                if (!ok) {
+                    // Stale / mismatched session — clear so user can log in fresh
+                    localStorage.removeItem(SESSION_KEY);
+                }
             }
         });
 
@@ -468,7 +508,7 @@
             document.getElementById("loading-overlay").style.display = "flex";
 
             try {
-                // Check if new username already exists
+                // Make sure the new username isn't already taken by some other profile
                 const newDocRef = doc(db, "profiles", newUserKey);
                 const newDocSnap = await getDoc(newDocRef);
 
@@ -494,6 +534,9 @@
                 // Update local state
                 currentUser = newUserKey;
                 displayUsername = input;
+
+                // Update the single-user lock so the new name is the allowed one
+                await updateLockDisplayName(newUserKey, input);
 
                 // Update saved session with new display name
                 localStorage.setItem(SESSION_KEY, displayUsername);
