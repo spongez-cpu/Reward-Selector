@@ -231,14 +231,14 @@
                 <iframe id="yt-playlist-iframe"
                     width="100%"
                     height="200"
-                    src="https://www.youtube.com/embed/videoseries?list=PLbKk2x3Sld1A&enablejsapi=1&mute=1&playsinline=1"
+                    src="https://www.youtube.com/embed/videoseries?list=PLbKk2x3Sld1A&enablejsapi=1&playsinline=1"
                     title="Study Playlist"
                     frameborder="0"
                     allow="autoplay; encrypted-media; picture-in-picture"
                     allowfullscreen>
                 </iframe>
             </div>
-            <p class="playlist-hint">Playlist plays automatically when you start studying. Unmute using the player controls.</p>
+            <p class="playlist-hint">Playlist plays automatically when you start studying.</p>
         </div>
 
         <!-- REWARDS -->
@@ -349,9 +349,9 @@
         // --- YOUTUBE PLAYER STATE ---
         let ytPlayer = null;
         let ytApiReady = false;
+        let ytHasPlayedOnce = false; // tracks first play to handle autoplay policy
 
         // --- HELPER: Sorted rewards (alphabetical, case-insensitive) ---
-        // Returns array of { reward, originalIndex } so edits/deletes still map correctly.
         function getSortedRewards() {
             return rewards
                 .map((reward, originalIndex) => ({ reward, originalIndex }))
@@ -382,7 +382,7 @@
             if (!rawInput || !rawInput.trim()) return false;
 
             const input = rawInput.trim();
-            currentUser = input.toLowerCase().replace(/[^a-z0-9]/g, ""); 
+            currentUser = input.toLowerCase().replace(/[^a-z0-9]/g, "");
             if (!currentUser) {
                 document.getElementById("sync-error").innerText = "Username must contain letters or numbers.";
                 return false;
@@ -462,7 +462,6 @@
                 if (!confirm("Timer is running. Are you sure you want to switch users?")) return;
                 clearInterval(timerInterval);
             }
-            // Pause playlist when switching users
             if (ytPlayer && ytApiReady) {
                 try { ytPlayer.pauseVideo(); } catch (e) { /* ignore */ }
             }
@@ -578,13 +577,11 @@
         }
 
         // --- YOUTUBE IFrame API ---
-        // Load the API asynchronously
         const ytTag = document.createElement('script');
         ytTag.src = "https://www.youtube.com/iframe_api";
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(ytTag, firstScriptTag);
 
-        // Global callback required by YouTube API
         window.onYouTubeIframeAPIReady = function() {
             const iframe = document.getElementById('yt-playlist-iframe');
             if (!iframe) return;
@@ -593,16 +590,36 @@
                 events: {
                     'onReady': () => {
                         ytApiReady = true;
-                        // Start muted by default so autoplay is allowed
-                        try { ytPlayer.mute(); } catch (e) { /* ignore */ }
+                        // Unmute from the start and set volume to 100
+                        try {
+                            ytPlayer.unMute();
+                            ytPlayer.setVolume(100);
+                        } catch (e) { /* ignore */ }
                     }
                 }
             });
         };
 
         function startPlaylist() {
-            if (ytPlayer && ytApiReady) {
-                try { ytPlayer.playVideo(); } catch (e) { console.warn("YT play failed:", e); }
+            if (!ytPlayer || !ytApiReady) return;
+            try {
+                // Re-assert unmuted playback every time we start/resume
+                ytPlayer.unMute();
+                ytPlayer.setVolume(100);
+                ytPlayer.playVideo();
+                ytHasPlayedOnce = true;
+            } catch (e) {
+                console.warn("YT play failed:", e);
+                // Fallback for browsers blocking audible autoplay on the very first play:
+                // retry muted so the timer experience still works.
+                if (!ytHasPlayedOnce) {
+                    try {
+                        ytPlayer.mute();
+                        ytPlayer.playVideo();
+                    } catch (e2) {
+                        console.warn("YT muted fallback failed:", e2);
+                    }
+                }
             }
         }
 
@@ -621,7 +638,6 @@
                 btn.style.backgroundColor = "#e67e22";
                 document.getElementById("subject-dropdown").disabled = true;
                 
-                // Start the playlist
                 startPlaylist();
 
                 timerInterval = setInterval(() => {
@@ -634,7 +650,6 @@
                 btn.style.backgroundColor = "#2ecc71";
                 clearInterval(timerInterval);
 
-                // Pause the playlist
                 pausePlaylist();
             }
         };
@@ -647,7 +662,6 @@
             document.getElementById("start-timer-btn").style.backgroundColor = "#2ecc71";
             document.getElementById("subject-dropdown").disabled = false;
 
-            // Pause the playlist when finishing
             pausePlaylist();
 
             const hoursEarned = secondsElapsed / 3600;
