@@ -151,6 +151,11 @@
         .history-list li { border-left-color: #95a5a6; font-size: 14px; background: white; }
         .today-total { font-size: 16px; color: #2980b9; font-weight: bold; margin-bottom: 10px; }
 
+        /* Playlist Styles */
+        .playlist-box { margin-top: 20px; }
+        .playlist-box iframe { border-radius: 8px; display: block; }
+        .playlist-hint { font-size: 12px; color: #888; margin-top: 6px; }
+
         /* Modal & Loading */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
         .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 350px; text-align: center; }
@@ -216,6 +221,24 @@
                 <div class="today-total">Today's Total: <span id="today-hours">0.00</span>h</div>
                 <ul id="history-list" class="history-list"></ul>
             </div>
+        </div>
+
+        <!-- PLAYLIST -->
+        <div class="container playlist-box">
+            <h1>Study Playlist 🎵</h1>
+            <!-- Replace YOUR_PLAYLIST_ID below with your actual YouTube playlist ID (starts with PL) -->
+            <div id="yt-player-container">
+                <iframe id="yt-playlist-iframe"
+                    width="100%"
+                    height="200"
+                    src="https://www.youtube.com/embed/videoseries?list=PLbKk2x3Sld1A&enablejsapi=1&mute=1&playsinline=1"
+                    title="Study Playlist"
+                    frameborder="0"
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                    allowfullscreen>
+                </iframe>
+            </div>
+            <p class="playlist-hint">Playlist plays automatically when you start studying. Unmute using the player controls.</p>
         </div>
 
         <!-- REWARDS -->
@@ -323,6 +346,10 @@
         // Track if we are editing an existing subject
         let editingSubjectIndex = -1; 
 
+        // --- YOUTUBE PLAYER STATE ---
+        let ytPlayer = null;
+        let ytApiReady = false;
+
         // --- HELPER: Sorted rewards (alphabetical, case-insensitive) ---
         // Returns array of { reward, originalIndex } so edits/deletes still map correctly.
         function getSortedRewards() {
@@ -332,8 +359,6 @@
         }
 
         // --- SINGLE-USER LOCK HELPERS ---
-        // The lock doc lives at system/lock and stores { usernameKey, displayName }.
-        // First-ever login claims it. Subsequent logins must match it.
         const LOCK_DOC_REF = doc(db, "system", "lock");
 
         async function getLockedUser() {
@@ -353,7 +378,6 @@
         // --- AUTH / PROFILE LOGIC ---
         window.handleEnter = (e) => { if (e.key === "Enter") loadProfile(); };
 
-        // Core session restore / login routine shared by login button and auto-restore
         async function restoreOrLoadProfile(rawInput) {
             if (!rawInput || !rawInput.trim()) return false;
 
@@ -368,23 +392,18 @@
             document.getElementById("sync-error").innerText = "";
 
             try {
-                // ---- SINGLE-USER CHECK ----
                 const lock = await getLockedUser();
 
                 if (lock) {
-                    // A user is already locked in. Only allow the matching username.
                     if (lock.usernameKey !== currentUser) {
                         document.getElementById("sync-error").innerText =
-                            `This app is locked to one user. Only that username can log in.`;
+                            "This app is locked to a different user. Only that username can log in.";
                         return false;
                     }
                 } else {
-                    // No lock yet — first login claims it. Make sure the profile doesn't already exist under another key... it won't, since no lock exists.
-                    // But be safe: if a profile doc somehow exists (e.g., legacy data), claim the lock to it.
                     await claimLock(currentUser, input);
                 }
 
-                // ---- LOAD PROFILE ----
                 const docRef = doc(db, "profiles", currentUser);
                 const docSnap = await getDoc(docRef);
 
@@ -393,23 +412,20 @@
                     studyCoins = data.studyCoins || 0;
                     totalHoursStudied = data.totalHoursStudied || 0;
                     
-                    // FIX: Migrate old string rewards
                     let rawRewards = data.rewards || [];
                     rewards = rawRewards.map(r => {
                         if (typeof r === 'string') return { text: r, link: "" };
                         return r;
                     });
 
-                    // FIX: Migrate old units that might not have a color
                     let rawUnits = data.units || [];
                     units = rawUnits.map(u => {
-                        if (!u.color) return { ...u, color: "#e67e22" }; // Default to orange
+                        if (!u.color) return { ...u, color: "#e67e22" };
                         return u;
                     });
 
                     dailyHistory = data.dailyHistory || {};
                 } else {
-                    // Lock exists but no profile doc — create a fresh empty profile for the locked user.
                     studyCoins = 0; totalHoursStudied = 0; rewards = []; units = []; dailyHistory = {};
                     await saveData();
                 }
@@ -417,7 +433,6 @@
                 todayHours = dailyHistory[todayDate] || 0;
                 displayUsername = input;
 
-                // Persist session so it survives reloads
                 localStorage.setItem(SESSION_KEY, displayUsername);
 
                 document.getElementById("username-display").innerText = displayUsername;
@@ -447,7 +462,10 @@
                 if (!confirm("Timer is running. Are you sure you want to switch users?")) return;
                 clearInterval(timerInterval);
             }
-            // Clear saved session so refresh shows the profile screen
+            // Pause playlist when switching users
+            if (ytPlayer && ytApiReady) {
+                try { ytPlayer.pauseVideo(); } catch (e) { /* ignore */ }
+            }
             localStorage.removeItem(SESSION_KEY);
             currentUser = "";
             displayUsername = "";
@@ -465,7 +483,6 @@
                 const ok = await restoreOrLoadProfile(savedUser);
                 document.getElementById("loading-overlay").innerText = "Syncing with Cloud... ☁️";
                 if (!ok) {
-                    // Stale / mismatched session — clear so user can log in fresh
                     localStorage.removeItem(SESSION_KEY);
                 }
             }
@@ -500,7 +517,6 @@
             }
 
             if (newUserKey === currentUser) {
-                // No change
                 closeUsernameModal();
                 return;
             }
@@ -508,7 +524,6 @@
             document.getElementById("loading-overlay").style.display = "flex";
 
             try {
-                // Make sure the new username isn't already taken by some other profile
                 const newDocRef = doc(db, "profiles", newUserKey);
                 const newDocSnap = await getDoc(newDocRef);
 
@@ -518,7 +533,6 @@
                     return;
                 }
 
-                // Write current data to the new username
                 await setDoc(newDocRef, {
                     studyCoins: studyCoins,
                     totalHoursStudied: totalHoursStudied,
@@ -527,18 +541,14 @@
                     dailyHistory: dailyHistory
                 });
 
-                // Delete old document
                 const oldDocRef = doc(db, "profiles", currentUser);
                 await deleteDoc(oldDocRef);
 
-                // Update local state
                 currentUser = newUserKey;
                 displayUsername = input;
 
-                // Update the single-user lock so the new name is the allowed one
                 await updateLockDisplayName(newUserKey, input);
 
-                // Update saved session with new display name
                 localStorage.setItem(SESSION_KEY, displayUsername);
 
                 document.getElementById("username-display").innerText = displayUsername;
@@ -567,6 +577,41 @@
             }
         }
 
+        // --- YOUTUBE IFrame API ---
+        // Load the API asynchronously
+        const ytTag = document.createElement('script');
+        ytTag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(ytTag, firstScriptTag);
+
+        // Global callback required by YouTube API
+        window.onYouTubeIframeAPIReady = function() {
+            const iframe = document.getElementById('yt-playlist-iframe');
+            if (!iframe) return;
+
+            ytPlayer = new YT.Player('yt-playlist-iframe', {
+                events: {
+                    'onReady': () => {
+                        ytApiReady = true;
+                        // Start muted by default so autoplay is allowed
+                        try { ytPlayer.mute(); } catch (e) { /* ignore */ }
+                    }
+                }
+            });
+        };
+
+        function startPlaylist() {
+            if (ytPlayer && ytApiReady) {
+                try { ytPlayer.playVideo(); } catch (e) { console.warn("YT play failed:", e); }
+            }
+        }
+
+        function pausePlaylist() {
+            if (ytPlayer && ytApiReady) {
+                try { ytPlayer.pauseVideo(); } catch (e) { console.warn("YT pause failed:", e); }
+            }
+        }
+
         // --- TIMER LOGIC ---
         window.toggleTimer = () => {
             const btn = document.getElementById("start-timer-btn");
@@ -576,6 +621,9 @@
                 btn.style.backgroundColor = "#e67e22";
                 document.getElementById("subject-dropdown").disabled = true;
                 
+                // Start the playlist
+                startPlaylist();
+
                 timerInterval = setInterval(() => {
                     secondsElapsed++;
                     updateTimerDisplay();
@@ -585,6 +633,9 @@
                 btn.innerText = "Resume";
                 btn.style.backgroundColor = "#2ecc71";
                 clearInterval(timerInterval);
+
+                // Pause the playlist
+                pausePlaylist();
             }
         };
 
@@ -595,6 +646,9 @@
             document.getElementById("start-timer-btn").innerText = "Start Study";
             document.getElementById("start-timer-btn").style.backgroundColor = "#2ecc71";
             document.getElementById("subject-dropdown").disabled = false;
+
+            // Pause the playlist when finishing
+            pausePlaylist();
 
             const hoursEarned = secondsElapsed / 3600;
             
@@ -644,7 +698,7 @@
                 document.getElementById("subject-modal-title").innerText = "Add Subject";
                 document.getElementById("subject-modal-save-btn").innerText = "Add";
                 document.getElementById("new-subject-input").value = "";
-                document.getElementById("new-subject-color").value = "#e67e22"; // Default orange
+                document.getElementById("new-subject-color").value = "#e67e22";
             } else {
                 document.getElementById("subject-modal-title").innerText = "Edit Subject";
                 document.getElementById("subject-modal-save-btn").innerText = "Save";
@@ -666,11 +720,9 @@
 
             if (text !== "") {
                 if (editingSubjectIndex === -1) {
-                    // Add new
                     units.push({ name: text, hours: 0, color: color });
                     activeUnitIndex = units.length - 1;
                 } else {
-                    // Edit existing
                     units[editingSubjectIndex].name = text;
                     units[editingSubjectIndex].color = color;
                     activeUnitIndex = editingSubjectIndex;
@@ -757,7 +809,6 @@
             document.getElementById("coin-count").innerText = studyCoins.toFixed(2);
             document.getElementById("total-hours").innerText = totalHoursStudied.toFixed(2);
 
-            // Update Daily History UI
             document.getElementById("today-hours").innerText = todayHours.toFixed(2);
             
             const historyList = document.getElementById("history-list");
@@ -781,7 +832,6 @@
                 historyList.innerHTML = "<li style='color:#95a5a6; font-size:12px; border:none;'>No previous records yet.</li>";
             }
 
-            // Update Dropdown
             const dropdown = document.getElementById("subject-dropdown");
             dropdown.innerHTML = '<option value="-1">General Study</option>';
             units.forEach((unit, index) => {
@@ -792,12 +842,11 @@
                 dropdown.appendChild(option);
             });
 
-            // Update Subject List (with Colors!)
             const subjectList = document.getElementById("subject-list");
             subjectList.innerHTML = "";
             units.forEach((unit, index) => {
                 const li = document.createElement("li");
-                li.style.borderLeftColor = unit.color; // Use the selected color
+                li.style.borderLeftColor = unit.color;
                 li.innerHTML = `
                     <span>${unit.name}</span>
                     <span class="reward-actions">
@@ -809,7 +858,6 @@
                 subjectList.appendChild(li);
             });
 
-            // Update Rewards List (SORTED ALPHABETICALLY)
             const list = document.getElementById("reward-list");
             list.innerHTML = "";
             getSortedRewards().forEach(({ reward, originalIndex }) => {
@@ -835,13 +883,12 @@
         }
 
         // --- SPINNER ---
-        // Uses sorted order for display. `sortedOrder` maps visual index -> original index.
         let sortedOrder = [];
 
         function updateSpinnerUI(activeIndex = -1) {
             const spinnerBox = document.getElementById("spinner-box");
             spinnerBox.innerHTML = "";
-            sortedOrder = getSortedRewards(); // recompute sorted mapping
+            sortedOrder = getSortedRewards();
 
             if (sortedOrder.length === 0) {
                 spinnerBox.innerHTML = "<p style='color: #888;'>No rewards added yet!</p>";
@@ -873,11 +920,9 @@
             isSpinning = true;
             document.getElementById("result").innerText = "Selecting a reward...";
 
-            // Sorted list is used for the spin
             const sorted = getSortedRewards();
             const total = sorted.length;
 
-            // Pick winning position in the SORTED list
             const winningVisualIndex = Math.floor(Math.random() * total);
             let currentIndex = 0;
             let totalSteps = total * 3 + winningVisualIndex;
