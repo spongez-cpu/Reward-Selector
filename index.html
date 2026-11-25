@@ -4,13 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study Reward Selector</title>
+    <title>Productivity Reward Selector</title>
 
     <!-- PWA TAGS -->
     <meta name="theme-color" content="#2ecc71">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Study Rewards">
+    <meta name="apple-mobile-web-app-title" content="Productivity Rewards">
     <link rel="apple-touch-icon" href="IMG_2096.png">
 
     <style>
@@ -169,7 +169,7 @@
 
     <div id="profile-screen">
         <div class="container">
-            <h1>Who's Studying? 👤</h1>
+            <h1>Who's Working? 👤</h1>
             <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Enter your username to sync your data across devices.</p>
             <input type="text" id="username-input" class="profile-input" placeholder="Username" autocomplete="off" onkeypress="handleEnter(event)">
             <button onclick="loadProfile()" style="width: 100%; padding: 12px;">Enter / Sync</button>
@@ -186,9 +186,9 @@
             <button class="logout-btn" onclick="logoutProfile()">Switch User</button>
         </div>
 
-        <!-- UNIFIED TIMER -->
+        <!-- PRODUCTIVITY TIMER -->
         <div class="container">
-            <h1>Study Timer ⏱️</h1>
+            <h1>Productivity Timer ⏱️</h1>
             
             <div class="stats-box">
                 Coins Available: <span id="coin-count">0</span> 🪙<br>
@@ -201,6 +201,7 @@
             <div class="subject-selector-row">
                 <select id="subject-dropdown" onchange="changeSubject()">
                     <option value="-1">General Study</option>
+                    <option value="-2">Exercise</option>
                 </select>
                 <button class="add-subject-btn" onclick="openSubjectModal()">+ Add</button>
             </div>
@@ -208,16 +209,16 @@
             <div class="timer-display" id="timer-display">00:00:00</div>
 
             <div class="timer-buttons">
-                <button id="start-timer-btn" onclick="toggleTimer()">Start Study</button>
+                <button id="start-timer-btn" onclick="toggleTimer()">Start</button>
                 <button id="stop-timer-btn" onclick="stopAndClaimTimer()">Finish & Claim</button>
             </div>
-            <p style="font-size: 13px; color: #666; margin-top: 5px;">(1 Hour studied = 1 Reward Coin)</p>
+            <p style="font-size: 13px; color: #666; margin-top: 5px;">(1 Hour = 1 Reward Coin)</p>
 
             <ul id="subject-list" style="margin-top: 25px; font-size: 14px;"></ul>
 
             <!-- DAILY HISTORY -->
             <div class="daily-box">
-                <h3>Daily Study Record</h3>
+                <h3>Daily Record</h3>
                 <div class="today-total">Today's Total: <span id="today-hours">0.00</span>h</div>
                 <ul id="history-list" class="history-list"></ul>
             </div>
@@ -225,25 +226,25 @@
 
         <!-- PLAYLIST -->
         <div class="container playlist-box">
-            <h1>Study Playlist 🎵</h1>
+            <h1>Productivity Playlist 🎵</h1>
             <!-- Replace YOUR_PLAYLIST_ID below with your actual YouTube playlist ID (starts with PL) -->
             <div id="yt-player-container">
                 <iframe id="yt-playlist-iframe"
                     width="100%"
                     height="200"
                     src="https://www.youtube.com/embed/videoseries?list=PLbKk2x3Sld1A&enablejsapi=1&playsinline=1"
-                    title="Study Playlist"
+                    title="Productivity Playlist"
                     frameborder="0"
                     allow="autoplay; encrypted-media; picture-in-picture"
                     allowfullscreen>
                 </iframe>
             </div>
-            <p class="playlist-hint">Playlist plays automatically when you start studying.</p>
+            <p class="playlist-hint">Playlist plays automatically when you start the timer.</p>
         </div>
 
         <!-- REWARDS -->
         <div class="container">
-            <h1>Reward Menu 🎁</h1>
+            <h1>Reward Selector 🎁</h1>
             <div class="input-area">
                 <div class="input-row">
                     <input type="text" id="reward-input" placeholder="Add reward (e.g., 15m YouTube)">
@@ -323,7 +324,7 @@
         const db = getFirestore(app);
 
         // LocalStorage key for persisted session
-        const SESSION_KEY = "studyRewards.currentUser";
+        const SESSION_KEY = "productivityRewards.currentUser";
 
         // --- STATE ---
         let currentUser = "";
@@ -349,7 +350,7 @@
         // --- YOUTUBE PLAYER STATE ---
         let ytPlayer = null;
         let ytApiReady = false;
-        let ytHasPlayedOnce = false; // tracks first play to handle autoplay policy
+        let ytHasPlayedOnce = false;
 
         // --- HELPER: Sorted rewards (alphabetical, case-insensitive) ---
         function getSortedRewards() {
@@ -590,7 +591,6 @@
                 events: {
                     'onReady': () => {
                         ytApiReady = true;
-                        // Unmute from the start and set volume to 100
                         try {
                             ytPlayer.unMute();
                             ytPlayer.setVolume(100);
@@ -603,15 +603,12 @@
         function startPlaylist() {
             if (!ytPlayer || !ytApiReady) return;
             try {
-                // Re-assert unmuted playback every time we start/resume
                 ytPlayer.unMute();
                 ytPlayer.setVolume(100);
                 ytPlayer.playVideo();
                 ytHasPlayedOnce = true;
             } catch (e) {
                 console.warn("YT play failed:", e);
-                // Fallback for browsers blocking audible autoplay on the very first play:
-                // retry muted so the timer experience still works.
                 if (!ytHasPlayedOnce) {
                     try {
                         ytPlayer.mute();
@@ -658,7 +655,7 @@
             if (secondsElapsed === 0) return;
             clearInterval(timerInterval);
             isStudying = false;
-            document.getElementById("start-timer-btn").innerText = "Start Study";
+            document.getElementById("start-timer-btn").innerText = "Start";
             document.getElementById("start-timer-btn").style.backgroundColor = "#2ecc71";
             document.getElementById("subject-dropdown").disabled = false;
 
@@ -669,7 +666,8 @@
             studyCoins += hoursEarned;
             totalHoursStudied += hoursEarned;
             
-            if (activeUnitIndex !== -1 && units[activeUnitIndex]) {
+            // Only add hours to a custom subject if one is selected (not General Study / Exercise)
+            if (activeUnitIndex !== -1 && activeUnitIndex >= 0 && units[activeUnitIndex]) {
                 units[activeUnitIndex].hours += hoursEarned;
             }
 
@@ -846,8 +844,20 @@
                 historyList.innerHTML = "<li style='color:#95a5a6; font-size:12px; border:none;'>No previous records yet.</li>";
             }
 
+            // Update Dropdown — keep both built-in defaults + custom subjects
             const dropdown = document.getElementById("subject-dropdown");
-            dropdown.innerHTML = '<option value="-1">General Study</option>';
+            dropdown.innerHTML = '';
+            
+            const generalOpt = document.createElement("option");
+            generalOpt.value = "-1";
+            generalOpt.innerText = "General Study";
+            dropdown.appendChild(generalOpt);
+            
+            const exerciseOpt = document.createElement("option");
+            exerciseOpt.value = "-2";
+            exerciseOpt.innerText = "Exercise";
+            dropdown.appendChild(exerciseOpt);
+            
             units.forEach((unit, index) => {
                 const option = document.createElement("option");
                 option.value = index;
@@ -855,6 +865,10 @@
                 if (index === activeUnitIndex) option.selected = true;
                 dropdown.appendChild(option);
             });
+            
+            // Re-select the active option if it's one of the defaults
+            if (activeUnitIndex === -1) generalOpt.selected = true;
+            if (activeUnitIndex === -2) exerciseOpt.selected = true;
 
             const subjectList = document.getElementById("subject-list");
             subjectList.innerHTML = "";
@@ -919,7 +933,7 @@
         window.spinWheel = () => {
             if (isSpinning) return;
             if (studyCoins < 1) {
-                alert("Not enough coins! Study more to earn coins.");
+                alert("Not enough coins! Work more to earn coins.");
                 return;
             }
             if (rewards.length === 0) {
