@@ -126,6 +126,15 @@
         }
         .link-btn:hover { background-color: #8e44ad; opacity: 0.9; }
 
+        /* Reward quantity badge */
+        .qty-badge {
+            font-size: 11px; font-weight: bold; padding: 2px 7px; border-radius: 10px;
+            white-space: nowrap; display: inline-block;
+        }
+        .qty-unlimited { background: #d5f5e3; color: #1e8449; }
+        .qty-limited { background: #fdebd0; color: #b9770e; }
+        .qty-low { background: #fadbd8; color: #c0392b; }
+
         /* Spinner */
         .spinner-box { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; padding: 12px; background: #fafafa; border-radius: 8px; border: 3px solid #3498db; }
         .spinner-item { background: white; border: 2px solid #ddd; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; color: #333; text-align: center; transition: all 0.1s ease; }
@@ -159,7 +168,7 @@
         /* Modal & Loading */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
         .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 350px; text-align: center; }
-        .modal-content select {
+        .modal-content select, .modal-content input[type="number"] {
             width: 100%; box-sizing: border-box; margin-bottom: 15px; padding: 10px;
             border: 2px solid #ddd; border-radius: 6px; font-size: 16px; background: white; cursor: pointer;
         }
@@ -257,6 +266,20 @@
                     <input type="url" id="reward-link-input" placeholder="Optional link (e.g., https://youtube.com...)">
                     <button onclick="addReward()" style="background-color: #3498db; white-space: nowrap;">Add</button>
                 </div>
+                <div class="input-row" style="align-items: center;">
+                    <select id="reward-qty-select" style="flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 16px; background: white; cursor: pointer;">
+                        <option value="unlimited">Unlimited</option>
+                        <option value="1">Quantity: 1</option>
+                        <option value="2">Quantity: 2</option>
+                        <option value="3">Quantity: 3</option>
+                        <option value="5">Quantity: 5</option>
+                        <option value="10">Quantity: 10</option>
+                        <option value="custom">Custom quantity…</option>
+                    </select>
+                    <input type="number" id="reward-qty-custom" min="1" step="1" value="1"
+                        placeholder="Qty"
+                        style="display: none; width: 90px; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 16px;">
+                </div>
             </div>
             <ul id="reward-list"></ul>
         </div>
@@ -328,6 +351,30 @@
         </div>
     </div>
 
+    <!-- EDIT REWARD QTY MODAL -->
+    <div class="modal" id="reward-qty-modal">
+        <div class="modal-content">
+            <h2 style="margin-top: 0; color: #333;">Edit Reward Quantity</h2>
+            <p id="reward-qty-modal-name" style="color: #666; font-size: 14px; margin-bottom: 15px;"></p>
+            <select id="edit-reward-qty-select">
+                <option value="unlimited">Unlimited</option>
+                <option value="1">Quantity: 1</option>
+                <option value="2">Quantity: 2</option>
+                <option value="3">Quantity: 3</option>
+                <option value="5">Quantity: 5</option>
+                <option value="10">Quantity: 10</option>
+                <option value="custom">Custom quantity…</option>
+            </select>
+            <input type="number" id="edit-reward-qty-custom" min="1" step="1" value="1"
+                placeholder="Qty"
+                style="display: none; width: 100%; box-sizing: border-box; margin-bottom: 15px; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 16px;">
+            <div style="display: flex; gap: 10px;">
+                <button onclick="closeRewardQtyModal()" style="background-color: #95a5a6; flex: 1;">Cancel</button>
+                <button onclick="saveRewardQty()" style="flex: 1;">Save</button>
+            </div>
+        </div>
+    </div>
+
     <!-- FIREBASE SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -356,7 +403,7 @@
         let displayUsername = "";
         let studyCoins = 0;
         let totalHoursStudied = 0;
-        let rewards = []; 
+        let rewards = []; // Each reward: { text, link, qty } where qty = null means unlimited
         let units = []; // Now holds { name, hours, color }
         
         let dailyHistory = {}; 
@@ -372,16 +419,47 @@
         // Track if we are editing an existing subject
         let editingSubjectIndex = -1; 
 
+        // Track which reward index is being edited in the qty modal
+        let editingRewardQtyIndex = -1;
+
         // --- YOUTUBE PLAYER STATE ---
         let ytPlayer = null;
         let ytApiReady = false;
         let ytHasPlayedOnce = false;
 
-        // --- HELPER: Sorted rewards (alphabetical, case-insensitive) ---
-        function getSortedRewards() {
+        // --- REWARD HELPERS ---
+        // A reward is available for spinning if it's unlimited (qty === null) or qty > 0
+        function isRewardAvailable(reward) {
+            return reward.qty === null || reward.qty === undefined || reward.qty > 0;
+        }
+
+        // Sorted, available-only list with original indices.
+        // Returns array of { reward, originalIndex }
+        function getSortedAvailableRewards() {
+            return rewards
+                .map((reward, originalIndex) => ({ reward, originalIndex }))
+                .filter(({ reward }) => isRewardAvailable(reward))
+                .sort((a, b) => a.reward.text.localeCompare(b.reward.text, undefined, { sensitivity: 'base' }));
+        }
+
+        // Full sorted list for the Reward Selector display (includes sold-out items so user can restock/delete)
+        function getSortedAllRewards() {
             return rewards
                 .map((reward, originalIndex) => ({ reward, originalIndex }))
                 .sort((a, b) => a.reward.text.localeCompare(b.reward.text, undefined, { sensitivity: 'base' }));
+        }
+
+        function formatQty(reward) {
+            if (reward.qty === null || reward.qty === undefined) {
+                return { label: "Unlimited", cls: "qty-unlimited" };
+            }
+            if (reward.qty <= 0) {
+                return { label: "Sold out", cls: "qty-low" };
+            }
+            if (reward.qty <= 2) {
+                return { label: `${reward.qty} left`, cls: "qty-low" };
+            }
+            return { label: `${reward.qty} left`, cls: "qty-limited" };
         }
 
         // --- SINGLE-USER LOCK HELPERS ---
@@ -438,10 +516,15 @@
                     studyCoins = data.studyCoins || 0;
                     totalHoursStudied = data.totalHoursStudied || 0;
                     
+                    // Migrate rewards: ensure qty field exists (null = unlimited)
                     let rawRewards = data.rewards || [];
                     rewards = rawRewards.map(r => {
-                        if (typeof r === 'string') return { text: r, link: "" };
-                        return r;
+                        if (typeof r === 'string') return { text: r, link: "", qty: null };
+                        return {
+                            text: r.text,
+                            link: r.link || "",
+                            qty: (r.qty === undefined || r.qty === null) ? null : r.qty
+                        };
                     });
 
                     let rawUnits = data.units || [];
@@ -511,6 +594,18 @@
                     localStorage.removeItem(SESSION_KEY);
                 }
             }
+
+            // Quantity selector show/hide for adding rewards
+            document.getElementById("reward-qty-select").addEventListener("change", (e) => {
+                document.getElementById("reward-qty-custom").style.display =
+                    (e.target.value === "custom") ? "block" : "none";
+            });
+
+            // Quantity selector show/hide for editing rewards
+            document.getElementById("edit-reward-qty-select").addEventListener("change", (e) => {
+                document.getElementById("edit-reward-qty-custom").style.display =
+                    (e.target.value === "custom") ? "block" : "none";
+            });
         });
 
         // --- USERNAME EDIT LOGIC ---
@@ -788,21 +883,39 @@
         window.addReward = () => {
             const textInput = document.getElementById("reward-input");
             const linkInput = document.getElementById("reward-link-input");
+            const qtySelect = document.getElementById("reward-qty-select");
+            const qtyCustom = document.getElementById("reward-qty-custom");
             
             const text = textInput.value.trim();
             let link = linkInput.value.trim();
             
-            if (text !== "") {
-                if (link !== "" && !link.startsWith("http://") && !link.startsWith("https://")) {
-                    link = "https://" + link;
+            if (text === "") return;
+
+            // Parse quantity
+            let qty = null; // null = unlimited
+            if (qtySelect.value === "custom") {
+                const parsed = parseInt(qtyCustom.value, 10);
+                if (isNaN(parsed) || parsed < 1) {
+                    alert("Please enter a valid quantity (1 or more).");
+                    return;
                 }
-                
-                rewards.push({ text: text, link: link });
-                textInput.value = "";
-                linkInput.value = "";
-                saveData();
-                updateUI();
+                qty = parsed;
+            } else if (qtySelect.value !== "unlimited") {
+                qty = parseInt(qtySelect.value, 10);
             }
+
+            if (link !== "" && !link.startsWith("http://") && !link.startsWith("https://")) {
+                link = "https://" + link;
+            }
+            
+            rewards.push({ text: text, link: link, qty: qty });
+            textInput.value = "";
+            linkInput.value = "";
+            qtySelect.value = "unlimited";
+            qtyCustom.value = "1";
+            qtyCustom.style.display = "none";
+            saveData();
+            updateUI();
         };
 
         window.deleteReward = (index) => {
@@ -827,10 +940,68 @@
             }
 
             if (newText.trim() !== "") {
-                rewards[index] = { text: newText.trim(), link: finalLink };
+                rewards[index].text = newText.trim();
+                rewards[index].link = finalLink;
                 saveData();
                 updateUI();
             }
+        };
+
+        // --- EDIT REWARD QTY MODAL ---
+        window.openRewardQtyModal = (index) => {
+            editingRewardQtyIndex = index;
+            const reward = rewards[index];
+            const select = document.getElementById("edit-reward-qty-select");
+            const customInput = document.getElementById("edit-reward-qty-custom");
+
+            document.getElementById("reward-qty-modal-name").innerText = reward.text;
+
+            if (reward.qty === null || reward.qty === undefined) {
+                select.value = "unlimited";
+                customInput.style.display = "none";
+            } else {
+                // If qty matches one of the preset values, select it; otherwise use custom
+                const presetValues = ["1", "2", "3", "5", "10"];
+                if (presetValues.includes(String(reward.qty))) {
+                    select.value = String(reward.qty);
+                    customInput.style.display = "none";
+                } else {
+                    select.value = "custom";
+                    customInput.value = reward.qty;
+                    customInput.style.display = "block";
+                }
+            }
+            customInput.value = (reward.qty !== null && reward.qty !== undefined) ? reward.qty : 1;
+
+            document.getElementById("reward-qty-modal").style.display = "flex";
+        };
+
+        window.closeRewardQtyModal = () => {
+            document.getElementById("reward-qty-modal").style.display = "none";
+            editingRewardQtyIndex = -1;
+        };
+
+        window.saveRewardQty = () => {
+            if (editingRewardQtyIndex === -1) return;
+            const select = document.getElementById("edit-reward-qty-select");
+            const customInput = document.getElementById("edit-reward-qty-custom");
+
+            let qty = null;
+            if (select.value === "custom") {
+                const parsed = parseInt(customInput.value, 10);
+                if (isNaN(parsed) || parsed < 1) {
+                    alert("Please enter a valid quantity (1 or more).");
+                    return;
+                }
+                qty = parsed;
+            } else if (select.value !== "unlimited") {
+                qty = parseInt(select.value, 10);
+            }
+
+            rewards[editingRewardQtyIndex].qty = qty;
+            saveData();
+            updateUI();
+            closeRewardQtyModal();
         };
 
         // --- OVERRIDE COIN (with reason) ---
@@ -848,7 +1019,6 @@
             document.getElementById("override-modal").style.display = "none";
         };
 
-        // Show/hide the custom reason input when "Other" is selected
         document.getElementById("override-reason-select").addEventListener("change", (e) => {
             const customInput = document.getElementById("override-custom-reason");
             customInput.style.display = (e.target.value === "Other (see below)") ? "block" : "none";
@@ -875,7 +1045,6 @@
                 reason = custom;
             }
 
-            // Award the coin
             studyCoins += 1;
             saveData();
             updateUI();
@@ -952,20 +1121,32 @@
                 subjectList.appendChild(li);
             });
 
+            // Update Rewards List — shows ALL rewards (including sold out ones)
             const list = document.getElementById("reward-list");
             list.innerHTML = "";
-            getSortedRewards().forEach(({ reward, originalIndex }) => {
+            getSortedAllRewards().forEach(({ reward, originalIndex }) => {
                 const li = document.createElement("li");
+                const available = isRewardAvailable(reward);
+                if (!available) {
+                    li.style.opacity = "0.55";
+                    li.style.borderLeftColor = "#bdc3c7";
+                }
                 
                 let linkBtnHTML = "";
                 if (reward.link) {
                     linkBtnHTML = `<a href="${reward.link}" target="_blank" class="link-btn">🔗 Open</a>`;
                 }
 
+                const qtyInfo = formatQty(reward);
+
                 li.innerHTML = `
-                    <span class="reward-text">${reward.text}</span>
+                    <span class="reward-text">
+                        ${reward.text}
+                        <span class="qty-badge ${qtyInfo.cls}">${qtyInfo.label}</span>
+                    </span>
                     <div class="reward-actions">
                         ${linkBtnHTML}
+                        <button class="edit-btn" onclick="openRewardQtyModal(${originalIndex})">Qty</button>
                         <button class="edit-btn" onclick="editReward(${originalIndex})">Edit</button>
                         <button class="delete-btn" onclick="deleteReward(${originalIndex})">Delete</button>
                     </div>
@@ -977,21 +1158,24 @@
         }
 
         // --- SPINNER ---
+        // Spinner only shows AVAILABLE rewards (qty > 0 or unlimited).
+        // sortedOrder maps visual index -> original index in the rewards array.
         let sortedOrder = [];
 
         function updateSpinnerUI(activeIndex = -1) {
             const spinnerBox = document.getElementById("spinner-box");
             spinnerBox.innerHTML = "";
-            sortedOrder = getSortedRewards();
+            sortedOrder = getSortedAvailableRewards();
 
             if (sortedOrder.length === 0) {
-                spinnerBox.innerHTML = "<p style='color: #888;'>No rewards added yet!</p>";
+                spinnerBox.innerHTML = "<p style='color: #888;'>No rewards available to spin!</p>";
                 return;
             }
             sortedOrder.forEach(({ reward }, visualIndex) => {
                 const div = document.createElement("div");
                 div.className = "spinner-item" + (visualIndex === activeIndex ? " active" : "");
-                div.innerText = reward.text; 
+                const qtyInfo = formatQty(reward);
+                div.innerHTML = `${reward.text} <span class="qty-badge ${qtyInfo.cls}">${qtyInfo.label}</span>`;
                 spinnerBox.appendChild(div);
             });
         }
@@ -1002,8 +1186,11 @@
                 alert("Not enough coins! Work more to earn coins.");
                 return;
             }
-            if (rewards.length === 0) {
-                alert("Add some rewards to the menu first!");
+
+            // Only spin over available rewards
+            const available = getSortedAvailableRewards();
+            if (available.length === 0) {
+                alert("No rewards available to spin! Add a reward or restock an existing one.");
                 return;
             }
 
@@ -1014,9 +1201,7 @@
             isSpinning = true;
             document.getElementById("result").innerText = "Selecting a reward...";
 
-            const sorted = getSortedRewards();
-            const total = sorted.length;
-
+            const total = available.length;
             const winningVisualIndex = Math.floor(Math.random() * total);
             let currentIndex = 0;
             let totalSteps = total * 3 + winningVisualIndex;
@@ -1034,14 +1219,29 @@
                 } else {
                     updateSpinnerUI(winningVisualIndex);
                     
-                    const winner = sorted[winningVisualIndex].reward;
-                    if (winner.link) {
-                        document.getElementById("result").innerHTML = `🎉 Reward Won: ${winner.text}! <br><br><a href="${winner.link}" target="_blank" class="link-btn" style="font-size:16px; padding:10px 20px;">🔗 Claim Your Reward</a>`;
+                    const winningReward = available[winningVisualIndex].reward;
+                    const winningOriginalIndex = available[winningVisualIndex].originalIndex;
+
+                    // Decrement quantity if limited
+                    if (winningReward.qty !== null && winningReward.qty !== undefined) {
+                        winningReward.qty -= 1;
+                        if (winningReward.qty <= 0) {
+                            // Remove reward entirely once depleted
+                            rewards.splice(winningOriginalIndex, 1);
+                        }
+                        saveData();
+                    }
+
+                    if (winningReward.link) {
+                        document.getElementById("result").innerHTML = `🎉 Reward Won: ${winningReward.text}! <br><br><a href="${winningReward.link}" target="_blank" class="link-btn" style="font-size:16px; padding:10px 20px;">🔗 Claim Your Reward</a>`;
                     } else {
-                        document.getElementById("result").innerText = `🎉 Reward Won: ${winner.text}!`;
+                        document.getElementById("result").innerText = `🎉 Reward Won: ${winningReward.text}!`;
                     }
                     
                     isSpinning = false;
+
+                    // Refresh UI after (may have deleted a sold-out reward)
+                    updateUI();
                 }
             }
             animateSpin();
