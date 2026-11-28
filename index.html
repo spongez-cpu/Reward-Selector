@@ -126,15 +126,6 @@
         }
         .link-btn:hover { background-color: #8e44ad; opacity: 0.9; }
 
-        /* Reward quantity badge */
-        .qty-badge {
-            font-size: 11px; font-weight: bold; padding: 2px 7px; border-radius: 10px;
-            white-space: nowrap; display: inline-block;
-        }
-        .qty-unlimited { background: #d5f5e3; color: #1e8449; }
-        .qty-limited { background: #fdebd0; color: #b9770e; }
-        .qty-low { background: #fadbd8; color: #c0392b; }
-
         /* Spinner */
         .spinner-box { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; padding: 12px; background: #fafafa; border-radius: 8px; border: 3px solid #3498db; }
         .spinner-item { background: white; border: 2px solid #ddd; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; color: #333; text-align: center; transition: all 0.1s ease; }
@@ -269,12 +260,12 @@
                 <div class="input-row" style="align-items: center;">
                     <select id="reward-qty-select" style="flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 16px; background: white; cursor: pointer;">
                         <option value="unlimited">Unlimited</option>
-                        <option value="1">Quantity: 1</option>
-                        <option value="2">Quantity: 2</option>
-                        <option value="3">Quantity: 3</option>
-                        <option value="5">Quantity: 5</option>
-                        <option value="10">Quantity: 10</option>
-                        <option value="custom">Custom quantity…</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="custom">Custom…</option>
                     </select>
                     <input type="number" id="reward-qty-custom" min="1" step="1" value="1"
                         placeholder="Qty"
@@ -358,12 +349,12 @@
             <p id="reward-qty-modal-name" style="color: #666; font-size: 14px; margin-bottom: 15px;"></p>
             <select id="edit-reward-qty-select">
                 <option value="unlimited">Unlimited</option>
-                <option value="1">Quantity: 1</option>
-                <option value="2">Quantity: 2</option>
-                <option value="3">Quantity: 3</option>
-                <option value="5">Quantity: 5</option>
-                <option value="10">Quantity: 10</option>
-                <option value="custom">Custom quantity…</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="custom">Custom…</option>
             </select>
             <input type="number" id="edit-reward-qty-custom" min="1" step="1" value="1"
                 placeholder="Qty"
@@ -447,19 +438,6 @@
             return rewards
                 .map((reward, originalIndex) => ({ reward, originalIndex }))
                 .sort((a, b) => a.reward.text.localeCompare(b.reward.text, undefined, { sensitivity: 'base' }));
-        }
-
-        function formatQty(reward) {
-            if (reward.qty === null || reward.qty === undefined) {
-                return { label: "Unlimited", cls: "qty-unlimited" };
-            }
-            if (reward.qty <= 0) {
-                return { label: "Sold out", cls: "qty-low" };
-            }
-            if (reward.qty <= 2) {
-                return { label: `${reward.qty} left`, cls: "qty-low" };
-            }
-            return { label: `${reward.qty} left`, cls: "qty-limited" };
         }
 
         // --- SINGLE-USER LOCK HELPERS ---
@@ -960,7 +938,6 @@
                 select.value = "unlimited";
                 customInput.style.display = "none";
             } else {
-                // If qty matches one of the preset values, select it; otherwise use custom
                 const presetValues = ["1", "2", "3", "5", "10"];
                 if (presetValues.includes(String(reward.qty))) {
                     select.value = String(reward.qty);
@@ -1121,7 +1098,7 @@
                 subjectList.appendChild(li);
             });
 
-            // Update Rewards List — shows ALL rewards (including sold out ones)
+            // Update Rewards List — shows ALL rewards (including sold out ones, dimmed, no qty shown)
             const list = document.getElementById("reward-list");
             list.innerHTML = "";
             getSortedAllRewards().forEach(({ reward, originalIndex }) => {
@@ -1137,13 +1114,8 @@
                     linkBtnHTML = `<a href="${reward.link}" target="_blank" class="link-btn">🔗 Open</a>`;
                 }
 
-                const qtyInfo = formatQty(reward);
-
                 li.innerHTML = `
-                    <span class="reward-text">
-                        ${reward.text}
-                        <span class="qty-badge ${qtyInfo.cls}">${qtyInfo.label}</span>
-                    </span>
+                    <span class="reward-text">${reward.text}</span>
                     <div class="reward-actions">
                         ${linkBtnHTML}
                         <button class="edit-btn" onclick="openRewardQtyModal(${originalIndex})">Qty</button>
@@ -1158,8 +1130,7 @@
         }
 
         // --- SPINNER ---
-        // Spinner only shows AVAILABLE rewards (qty > 0 or unlimited).
-        // sortedOrder maps visual index -> original index in the rewards array.
+        // Spinner only shows AVAILABLE rewards (qty > 0 or unlimited), text only, no qty.
         let sortedOrder = [];
 
         function updateSpinnerUI(activeIndex = -1) {
@@ -1174,8 +1145,7 @@
             sortedOrder.forEach(({ reward }, visualIndex) => {
                 const div = document.createElement("div");
                 div.className = "spinner-item" + (visualIndex === activeIndex ? " active" : "");
-                const qtyInfo = formatQty(reward);
-                div.innerHTML = `${reward.text} <span class="qty-badge ${qtyInfo.cls}">${qtyInfo.label}</span>`;
+                div.innerText = reward.text;
                 spinnerBox.appendChild(div);
             });
         }
